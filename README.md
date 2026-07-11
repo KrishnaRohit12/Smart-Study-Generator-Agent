@@ -216,9 +216,9 @@ This project is powered by **IBM Granite 3.3**, IBM's enterprise-ready LLM avail
 
 | Landing Page | AI Chat | Upload Notes |
 |:---:|:---:|:---:|
-|<img width="500" height="400" alt="image" src="https://github.com/user-attachments/assets/42688dde-bd5d-4295-8671-17eaecb9765b" />|
-|<img width="500" height="642" alt="image" src="https://github.com/user-attachments/assets/f6d15607-7fbf-412d-adc3-98e824eba927" />|
-|<img width="500" height="635" alt="image" src="https://github.com/user-attachments/assets/28573ad0-388e-42b6-b1f6-efe3c1d56f46" />|
+|<img width="1356" height="643" alt="image" src="https://github.com/user-attachments/assets/42688dde-bd5d-4295-8671-17eaecb9765b" />|
+<img width="1300" height="642" alt="image" src="https://github.com/user-attachments/assets/f6d15607-7fbf-412d-adc3-98e824eba927" />|
+<img width="1300" height="635" alt="image" src="https://github.com/user-attachments/assets/28573ad0-388e-42b6-b1f6-efe3c1d56f46" />|
 
 | Quiz | Flashcards | Dashboard |
 |:---:|:---:|:---:|
