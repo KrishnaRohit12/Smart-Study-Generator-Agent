@@ -1,10 +1,252 @@
-# Smart-Study-Generator-Agent
-An AI-powered Smart Study Generator Agent built for IBM University Engagement. It helps students upload study materials, generate summaries, create quizzes, receive personalized study plans, interact with an AI chatbot, and track learning progress using IBM Granite AI concepts and modern web technologies.
-SCREENSHOTs
-<img width="1341" height="629" alt="image" src="https://github.com/user-attachments/assets/5a1c3a7c-97c9-4b20-968d-c92d850ff787" />
-<img width="1352" height="630" alt="image" src="https://github.com/user-attachments/assets/ba1dc53e-58a6-4a12-a942-57d69e1e0c2e" />
-<img width="1345" height="767" alt="image" src="https://github.com/user-attachments/assets/a0e6e022-c851-436d-95b1-6ffee790de5a" />
-<img width="1326" height="767" alt="image" src="https://github.com/user-attachments/assets/c2fa5019-accc-4b8e-ba73-0b970cd6e98f" />
-<img width="1348" height="755" alt="image" src="https://github.com/user-attachments/assets/5d6b052c-efea-4908-bbc0-d3793056afc6" />
-<img width="1325" height="767" alt="image" src="https://github.com/user-attachments/assets/6434b6db-c0d8-4ea7-9c01-4156db89de32" />
-<img width="1347" height="766" alt="image" src="https://github.com/user-attachments/assets/d2fa86f4-7e1b-4d34-92e4-9babc4044554" />
+<div align="center">
+
+# 🧠 Smart Study Generator Agent
+
+**An AI-powered academic companion built on IBM Granite 3.3 & watsonx.ai**
+
+[![IBM University Engagement](https://img.shields.io/badge/IBM-University%20Engagement-0f62fe?style=flat-square&logo=ibm&logoColor=white)](https://www.ibm.com/academic)
+[![Powered by IBM Granite](https://img.shields.io/badge/Powered%20by-IBM%20Granite%203.3-6929c4?style=flat-square&logo=ibm&logoColor=white)](https://www.ibm.com/watsonx)
+[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
+[![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+[![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=flat-square&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+
+<br />
+
+> Transform raw lecture notes into crisp summaries, adaptive quizzes, flashcard decks,  
+> and personalised study plans — all powered by **IBM Granite 3.3** on **watsonx.ai**.
+
+<br />
+
+![Smart Study Generator Hero](https://via.placeholder.com/860x420/040c1c/78a9ff?text=Smart+Study+Generator+Agent)
+
+</div>
+
+---
+
+## 📋 Table of Contents
+
+- [Overview](#-overview)
+- [Features](#-features)
+- [Pages & Modules](#-pages--modules)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Getting Started](#-getting-started)
+- [How It Works](#-how-it-works)
+- [IBM Granite Integration](#-ibm-granite-integration)
+- [Screenshots](#-screenshots)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+---
+
+## 🌟 Overview
+
+**Smart Study Generator Agent** is a full-featured, front-end web application developed as part of the **IBM University Engagement** programme. It bridges the gap between raw academic material and effective exam preparation by leveraging the power of **IBM Granite 3.3** — IBM's enterprise-grade large language model hosted on **watsonx.ai**.
+
+Students can upload their lecture notes (PDF, DOCX, TXT, or images), then instantly receive:
+
+- **AI-generated summaries** that distill key concepts
+- **Adaptive quizzes** tailored to the uploaded material
+- **Interactive flashcard decks** for spaced repetition
+- **Personalised study plans** with day-by-day schedules
+- **Contextual AI chat** to ask questions about their notes
+- **A progress dashboard** to track learning over time
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 📄 **Note Upload** | Drag-and-drop PDF, DOCX, TXT, JPEG, PNG, WEBP (up to 20 MB each) |
+| 🤖 **AI Chat** | Ask contextual questions grounded in your uploaded notes |
+| ❓ **Quiz Generator** | Auto-generate MCQ and short-answer quizzes with instant feedback |
+| 🃏 **Flashcard Deck** | Flip-card decks with keyboard navigation for spaced repetition |
+| 📅 **Study Planner** | Week-by-week personalised study schedules |
+| 📊 **Dashboard** | Visual progress tracking, streaks, and performance metrics |
+| 🌗 **Dark / Light Mode** | Persistent theme preference stored in `localStorage` |
+| 📱 **Fully Responsive** | Optimised for desktop, tablet, and mobile |
+| ♿ **Accessible** | Semantic HTML, ARIA labels, keyboard navigation, reduced-motion support |
+
+---
+
+## 🗂 Pages & Modules
+
+| Page | Path | Description |
+|---|---|---|
+| **Landing** | `index.html` | Hero, feature overview, how-it-works, IBM Granite spotlight |
+| **Upload Notes** | `pages/upload.html` | File drop zone with validation, progress bar, and queue management |
+| **AI Chat** | `pages/chat.html` | Conversational interface grounded in uploaded notes |
+| **Quiz** | `pages/quiz.html` | Timed adaptive quizzes generated from study material |
+| **Flashcards** | `pages/flashcards.html` | Interactive flip-card deck with keyboard shortcuts |
+| **Study Planner** | `pages/planner.html` | Drag-and-rearrange weekly study planner |
+| **Dashboard** | `pages/dashboard.html` | Analytics — scores, streaks, time studied, topic coverage |
+| **About** | `pages/about.html` | Project background, team, and IBM Granite details |
+| **Contact** | `pages/contact.html` | Contact form and project links |
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Markup** | HTML5 with semantic elements & ARIA |
+| **Styling** | Vanilla CSS3 — custom properties, CSS Grid, Flexbox, animations |
+| **Logic** | Vanilla JavaScript (ES6+, strict mode, no build step required) |
+| **Icons** | [Font Awesome 6.5](https://fontawesome.com/) via CDN |
+| **AI Model** | [IBM Granite 3.3](https://www.ibm.com/granite) on [watsonx.ai](https://www.ibm.com/watsonx) |
+| **Storage** | Browser `localStorage` for theme and session preferences |
+
+> **Zero dependencies.** No npm, no bundler, no framework — open `index.html` and go.
+
+---
+
+## 📁 Project Structure
+
+```
+IBM_Study_Generator/
+├── index.html              # Landing page
+├── style.css               # Root stylesheet (legacy)
+├── script.js               # Root script (legacy)
+│
+├── css/
+│   ├── variables.css       # Design tokens (colours, spacing, radii)
+│   ├── global.css          # Base resets, nav, buttons, layout helpers
+│   ├── reset.css           # Normalisation layer
+│   ├── landing.css         # Landing page styles
+│   ├── chat.css            # AI Chat interface styles
+│   ├── upload.css          # Upload zone & queue styles
+│   └── planner.css         # Study planner calendar styles
+│
+├── js/
+│   ├── app.js              # Shared module — nav, theme, scroll-reveal, counters, toasts
+│   ├── chat.js             # AI Chat — message thread, typing indicator, export
+│   ├── upload.js           # File validation, progress, queue management
+│   ├── landing.js          # Landing page interactions
+│   └── planner.js          # Study planner drag-and-arrange logic
+│
+├── pages/
+│   ├── upload.html         # Upload Notes
+│   ├── chat.html           # AI Chat
+│   ├── quiz.html           # Quiz Generator
+│   ├── flashcards.html     # Flashcard Deck
+│   ├── planner.html        # Study Planner
+│   ├── dashboard.html      # Progress Dashboard
+│   ├── about.html          # About the project
+│   └── contact.html        # Contact
+│
+└── assets/                 # Images, icons, and static media
+```
+
+---
+
+## 🚀 Getting Started
+
+No installation or build step is required — this is a **pure front-end project**.
+
+### Run locally
+
+```bash
+# Clone the repository
+git clone https://github.com/<your-username>/IBM_Study_Generator.git
+
+# Open in your browser
+cd IBM_Study_Generator
+open index.html          # macOS
+start index.html         # Windows
+xdg-open index.html      # Linux
+```
+
+Or serve with any static file server for the best experience:
+
+```bash
+# Using Python
+python -m http.server 8080
+
+# Using Node.js (npx)
+npx serve .
+
+# Using VS Code
+# Install the "Live Server" extension, then click "Go Live"
+```
+
+Then visit **http://localhost:8080** in your browser.
+
+---
+
+## ⚙️ How It Works
+
+```
+┌──────────────┐    ┌─────────────────┐    ┌──────────────────────┐
+│  Upload Notes │───▶│  IBM Granite AI  │───▶│  Study Materials     │
+│  (PDF / DOCX) │    │  (watsonx.ai)    │    │  ┌─ Summary          │
+└──────────────┘    └─────────────────┘    │  ├─ Quiz             │
+                                            │  ├─ Flashcards       │
+                                            │  ├─ Study Plan       │
+                                            │  └─ AI Chat Context  │
+                                            └──────────────────────┘
+```
+
+1. **Upload** — Drop one or more notes files into the upload zone. The client validates format and size (max 20 MB per file).
+2. **Process** — IBM Granite 3.3 indexes the content, extracting key concepts, formulae, and relationships.
+3. **Study** — Navigate to any module. Every feature is grounded in the documents you uploaded.
+4. **Track** — The dashboard records your quiz scores, time studied, and topic coverage over time.
+
+---
+
+## 🔷 IBM Granite Integration
+
+This project is powered by **IBM Granite 3.3**, IBM's enterprise-ready LLM available on [watsonx.ai](https://www.ibm.com/watsonx).
+
+| Capability | How it's used |
+|---|---|
+| **Text Summarisation** | Condenses uploaded notes into bullet-point concept maps |
+| **Question Generation** | Creates MCQ and short-answer quizzes calibrated to difficulty |
+| **Flashcard Authoring** | Produces Q&A pairs optimised for spaced repetition |
+| **Study Plan Generation** | Builds day-by-day schedules based on content volume and exam date |
+| **Contextual Q&A** | Answers student questions grounded strictly in uploaded documents |
+
+> The current version ships with **simulated Granite responses** for front-end demonstration.  
+> To connect to a live watsonx.ai endpoint, replace the `AI_RESPONSES` object in [`js/chat.js`](js/chat.js) with your watsonx.ai REST API calls.
+
+---
+
+## 📸 Screenshots
+
+| Landing Page | AI Chat | Upload Notes |
+|:---:|:---:|:---:|
+| *(add screenshot)* | *(add screenshot)* | *(add screenshot)* |
+
+| Quiz | Flashcards | Dashboard |
+|:---:|:---:|:---:|
+| *(add screenshot)* | *(add screenshot)* | *(add screenshot)* |
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Here's how to get started:
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/your-feature-name`
+3. **Commit** your changes: `git commit -m "feat: add your feature"`
+4. **Push** the branch: `git push origin feature/your-feature-name`
+5. **Open** a Pull Request
+
+Please follow the existing code style — vanilla JS in strict mode, BEM-style CSS class names, and semantic HTML with ARIA attributes.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+
+Built with ❤️ as part of the **IBM University Engagement** programme  
+Powered by [IBM Granite 3.3](https://www.ibm.com/granite) on [watsonx.ai](https://www.ibm.com/watsonx)
+
+</div>
