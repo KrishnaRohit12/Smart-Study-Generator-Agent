@@ -216,14 +216,14 @@ This project is powered by **IBM Granite 3.3**, IBM's enterprise-ready LLM avail
 
 | Landing Page | AI Chat | Upload Notes |
 |:---:|:---:|:---:|
-| <img width="1336" height="634" alt="image" src="https://github.com/user-attachments/assets/42688dde-bd5d-4295-8671-17eaecb9765b" />
-| <img width="1364" height="642" alt="image" src="https://github.com/user-attachments/assets/f6d15607-7fbf-412d-adc3-98e824eba927" />
+| <img width="1336" height="634" alt="image" src="https://github.com/user-attachments/assets/42688dde-bd5d-4295-8671-17eaecb9765b" />|
+| <img width="1364" height="642" alt="image" src="https://github.com/user-attachments/assets/f6d15607-7fbf-412d-adc3-98e824eba927" />|
 | <img width="1347" height="635" alt="image" src="https://github.com/user-attachments/assets/28573ad0-388e-42b6-b1f6-efe3c1d56f46" />|
 
 | Quiz | Flashcards | Dashboard |
 |:---:|:---:|:---:|
-|<img width="1345" height="767" alt="image" src="https://github.com/user-attachments/assets/f9609a57-7a76-4971-bc62-af07eed1b986" />
-| <img width="1335" height="767" alt="image" src="https://github.com/user-attachments/assets/9e34b172-4e62-4723-930e-5927a02dfc7b" />
+|<img width="1345" height="767" alt="image" src="https://github.com/user-attachments/assets/f9609a57-7a76-4971-bc62-af07eed1b986" />|
+| <img width="1335" height="767" alt="image" src="https://github.com/user-attachments/assets/9e34b172-4e62-4723-930e-5927a02dfc7b" />|
 | <img width="1331" height="630" alt="image" src="https://github.com/user-attachments/assets/621cdd63-b358-4a7e-bcc3-5858b7d1af14" />|
 
 ---
