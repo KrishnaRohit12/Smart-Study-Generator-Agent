@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Smart Study Generator Agent — IBM University Engagement project. Upload notes, generate AI summaries, quizzes, flashcards, and study plans powered by IBM Granite 3.3." />
+  <meta name="theme-color" content="#0f62fe" />
+  <title>Smart Study Generator Agent | IBM University Engagement</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Global stylesheet -->
+  <link rel="stylesheet" href="css/global.css" />
+
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       Landing-page-specific styles (not in global.css)
+       ═══════════════════════════════════════════════════════════ */
+
+    /* ── Hero ───────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      align-items: center;
+      padding: calc(var(--nav-h) + var(--sp-12)) 0 var(--sp-16);
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 58% 62% at 10% 55%, rgba(15,98,254,.30) 0%, transparent 56%),
+        radial-gradient(ellipse 42% 46% at 92% 18%, rgba(105,41,196,.22) 0%, transparent 56%),
+        radial-gradient(ellipse 38% 36% at 55% 88%, rgba(17,146,232,.14) 0%, transparent 54%),
+        linear-gradient(158deg, #040c1c 0%, #071330 40%, #091c4a 70%, #050b1e 100%);
+    }
+
+    /* Grid overlay */
+    .hero__grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(120,169,255,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(120,169,255,.055) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 85% 85% at 50% 50%, black 25%, transparent 78%);
+      pointer-events: none;
+    }
+
+    /* Glowing orbs */
+    .hero__glow {
+      position: absolute;
+      pointer-events: none;
+      border-radius: 50%;
+      filter: blur(72px);
+      animation: glow-pulse 4s ease-in-out infinite alternate;
+    }
+    .hero__glow--a {
+      width: 480px; height: 480px;
+      background: radial-gradient(circle, rgba(15,98,254,.22) 0%, transparent 70%);
+      top: -80px; left: -100px;
+    }
+    .hero__glow--b {
+      width: 360px; height: 360px;
+      background: radial-gradient(circle, rgba(105,41,196,.18) 0%, transparent 70%);
+      top: 40px; right: -60px;
+      animation-delay: 1.8s;
+    }
+    .hero__glow--c {
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(17,146,232,.15) 0%, transparent 70%);
+      bottom: 60px; left: 38%;
+      animation-delay: 1s;
+    }
+
+    /* Layout */
+    .hero__inner {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-16);
+      align-items: center;
+    }
+
+    /* Left column */
+    .hero__copy { animation: fade-up .85s cubic-bezier(.4,0,.2,1) both; }
+
+    .hero__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-2);
+      background: rgba(120,169,255,.10);
+      border: 1px solid rgba(120,169,255,.30);
+      border-radius: var(--radius-full);
+      padding: 6px 16px;
+      margin-bottom: var(--sp-5);
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--blue-30);
+      letter-spacing: .9px;
+      text-transform: uppercase;
+    }
+    .hero__badge-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--blue-30);
+      box-shadow: 0 0 8px var(--blue-30);
+      animation: dot-blink 2.5s ease-in-out infinite;
+    }
+    @keyframes dot-blink { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    .hero__title {
+      font-size: clamp(2.3rem, 4.8vw, 3.6rem);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -1.5px;
+      line-height: 1.08;
+      margin-bottom: var(--sp-5);
+    }
+    .hero__title-accent {
+      background: linear-gradient(100deg, #78a9ff 0%, #a8c8ff 50%, #c5daff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero__subtitle {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,.62);
+      line-height: 1.78;
+      max-width: 500px;
+      margin-bottom: var(--sp-8);
+    }
+
+    .hero__cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-10);
+    }
+
+    /* Social proof */
+    .hero__proof {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+    }
+    .hero__avatars {
+      display: flex;
+    }
+    .hero__avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.15);
+      background: linear-gradient(135deg, var(--blue-60), var(--blue-40));
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem; font-weight: 700; color: var(--white);
+      margin-left: -10px;
+      transition: transform var(--ease);
+    }
+    .hero__avatars .hero__avatar:first-child { margin-left: 0; }
+    .hero__avatars:hover .hero__avatar { margin-left: -6px; }
+    .hero__avatar--b { background: linear-gradient(135deg, var(--violet), #8a3ffc); }
+    .hero__avatar--c { background: linear-gradient(135deg, var(--cyan), var(--teal)); }
+    .hero__avatar--d { background: linear-gradient(135deg, #198038, var(--teal)); }
+
+    .hero__proof-text {
+      font-size: .85rem;
+      color: rgba(255,255,255,.55);
+      line-height: 1.4;
+    }
+    .hero__proof-text strong { color: rgba(255,255,255,.88); font-weight: 700; }
+
+    /* Right column — visual */
+    .hero__visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fade-left .9s .2s cubic-bezier(.4,0,.2,1) both;
+    }
+    .hero__visual-wrap {
+      position: relative;
+      width: 400px; height: 350px;
+      animation: float 5s ease-in-out infinite;
+    }
+
+    /* ── Stats strip ────────────────────────────────────────── */
+    .stats-strip {
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+      padding: var(--sp-14) 0;
+    }
+    .stats-strip__grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--sp-5);
+    }
+    .stat-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-card);
+      padding: var(--sp-8) var(--sp-6);
+      text-align: center;
+      transition: transform var(--ease-out), box-shadow var(--ease-out), border-color var(--ease);
+      position: relative; overflow: hidden;
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--blue-50), var(--blue-30));
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+      opacity: 0; transition: opacity var(--ease);
+    }
+    .stat-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--blue-20); }
+    .stat-card:hover::after { opacity: 1; }
+    .stat-card__icon {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--blue-10), #d0e4ff);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto var(--sp-4);
+      font-size: 1.3rem;
+      color: var(--blue-60);
+      transition: background var(--ease), transform var(--ease-bounce);
+    }
+    .stat-card:hover .stat-card__icon { background: var(--blue-50); color: var(--white); transform: scale(1.1) rotate(-3deg); }
+    [data-theme="dark"] .stat-card__icon { background: rgba(15,98,254,.18); color: var(--blue-30); }
+    [data-theme="dark"] .stat-card:hover .stat-card__icon { background: var(--blue-50); color: var(--white); }
+    .stat-card__number {
+      font-size: clamp(2rem, 3.8vw, 2.75rem);
+      font-weight: 800;
+      color: var(--color-primary);
+      line-height: 1;
+      letter-spacing: -.04em;
+      margin-bottom: var(--sp-2);
+    }
+    .stat-card__label {
+      font-size: .875rem;
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+
+    /* ── Features ───────────────────────────────────────────── */
+    .features {
+      padding: var(--sp-20) 0;
+      background: var(--color-bg);
+    }
+    .features__header {
+      text-align: center;
+      margin-bottom: var(--sp-14);
+    }
+    .features__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-5);
+    }
+
+    .feat-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--sp-8);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--ease-out), box-shadow var(--ease-out), border-color var(--ease);
+      text-decoration: none;
+      color: inherit;
+    }
+    .feat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      opacity: 0;
+      transition: opacity var(--ease);
+    }
+    /* Subtle glass shimmer on hover */
+    .feat-card::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(145deg, rgba(255,255,255,.04) 0%, transparent 60%);
+      pointer-events: none;
+      border-radius: var(--radius-xl);
+    }
+    .feat-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow-xl);
+      border-color: var(--blue-20);
+    }
+    .feat-card:hover::before { opacity: 1; }
+
+    /* Per-card gradient accents */
+    .feat-card--1::before { background: linear-gradient(90deg, #0f62fe, #4589ff); }
+    .feat-card--2::before { background: linear-gradient(90deg, #6929c4, #a56eff); }
+    .feat-card--3::before { background: linear-gradient(90deg, #1192e8, #33b1ff); }
+    .feat-card--4::before { background: linear-gradient(90deg, #009d9a, #3ddbd9); }
+    .feat-card--5::before { background: linear-gradient(90deg, #198038, #42be65); }
+    .feat-card--6::before { background: linear-gradient(90deg, #f1c21b, #ff832b); }
+
+    .feat-card__icon-wrap {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+    .feat-card--1 .feat-card__icon-wrap { background: linear-gradient(135deg,#dde9ff,#c1d7ff); color: var(--blue-60); }
+    .feat-card--2 .feat-card__icon-wrap { background: linear-gradient(135deg,#f0e8ff,#ddc8ff); color: var(--violet); }
+    .feat-card--3 .feat-card__icon-wrap { background: linear-gradient(135deg,#d9f0ff,#b3e0ff); color: #0072c3; }
+    .feat-card--4 .feat-card__icon-wrap { background: linear-gradient(135deg,#d9fbfb,#9ef0f0); color: #007d79; }
+    .feat-card--5 .feat-card__icon-wrap { background: linear-gradient(135deg,#defbe6,#a7f0ba); color: var(--green-50); }
+    .feat-card--6 .feat-card__icon-wrap { background: linear-gradient(135deg,#fff8d0,#fce383); color: #7a4f00; }
+
+    [data-theme="dark"] .feat-card--1 .feat-card__icon-wrap { background: rgba(15,98,254,.2); color: var(--blue-30); }
+    [data-theme="dark"] .feat-card--2 .feat-card__icon-wrap { background: rgba(105,41,196,.2); color: #c5a6ff; }
+    [data-theme="dark"] .feat-card--3 .feat-card__icon-wrap { background: rgba(17,146,232,.2); color: #33b1ff; }
+    [data-theme="dark"] .feat-card--4 .feat-card__icon-wrap { background: rgba(0,157,154,.2); color: #3ddbd9; }
+    [data-theme="dark"] .feat-card--5 .feat-card__icon-wrap { background: rgba(25,128,56,.2); color: #42be65; }
+    [data-theme="dark"] .feat-card--6 .feat-card__icon-wrap { background: rgba(241,194,27,.15); color: #f1c21b; }
+
+    .feat-card__title {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    .feat-card__desc {
+      font-size: .9rem;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+      flex: 1;
+    }
+    .feat-card__link {
+      font-size: .875rem;
+      font-weight: 600;
+      color: var(--color-primary);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: gap var(--ease), color var(--ease);
+    }
+    .feat-card:hover .feat-card__link { gap: 10px; }
+
+    /* ── How it works ───────────────────────────────────────── */
+    .how {
+      padding: var(--sp-20) 0;
+      background: var(--color-surface);
+    }
+    .how__header {
+      text-align: center;
+      margin-bottom: var(--sp-16);
+    }
+    .how__steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--sp-6);
+      position: relative;
+    }
+    /* Connecting line */
+    .how__steps::before {
+      content: '';
+      position: absolute;
+      top: 44px;
+      left: calc(12.5% + 28px);
+      right: calc(12.5% + 28px);
+      height: 2px;
+      background: linear-gradient(90deg, var(--blue-50), var(--blue-30), var(--cyan));
+      border-radius: var(--radius-full);
+      opacity: .45;
+      pointer-events: none;
+    }
+
+    .step-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--sp-8) var(--sp-6);
+      text-align: center;
+      box-shadow: var(--shadow-card);
+      transition: transform var(--ease-out), box-shadow var(--ease-out);
+    }
+    .step-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+
+    .step-card__num {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      margin: 0 auto var(--sp-5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--white);
+      background: linear-gradient(135deg, var(--blue-50), var(--blue-60));
+      box-shadow: var(--shadow-blue-sm);
+      position: relative;
+      z-index: 1;
+    }
+    .step-card__num i { font-size: 1.15rem; }
+    .step-card__title {
+      font-size: 1.0625rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin-bottom: var(--sp-3);
+    }
+    .step-card__desc {
+      font-size: .9rem;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+    }
+    .step-card__badge {
+      display: inline-block;
+      margin-top: var(--sp-4);
+      padding: 3px 12px;
+      background: var(--blue-10);
+      border: 1px solid var(--blue-20);
+      border-radius: var(--radius-full);
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--blue-60);
+      letter-spacing: .4px;
+    }
+    [data-theme="dark"] .step-card__badge { background: rgba(15,98,254,.18); border-color: rgba(15,98,254,.3); color: var(--blue-30); }
+
+    /* ── IBM Granite ────────────────────────────────────────── */
+    .granite {
+      padding: var(--sp-24) 0;
+      background:
+        radial-gradient(ellipse 58% 52% at 6% 58%, rgba(15,98,254,.18) 0%, transparent 54%),
+        radial-gradient(ellipse 48% 42% at 94% 28%, rgba(105,41,196,.16) 0%, transparent 54%),
+        linear-gradient(158deg, #080f1d 0%, #0c162a 50%, #0e1b42 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .granite__bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(120,169,255,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(120,169,255,.04) 1px, transparent 1px);
+      background-size: 52px 52px;
+      pointer-events: none;
+    }
+    .granite__inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-16);
+      align-items: center;
+    }
+    .granite__icon {
+      font-size: 3.5rem;
+      margin-bottom: var(--sp-5);
+      filter: drop-shadow(0 0 24px rgba(15,98,254,.5));
+    }
+    .granite__label {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-2);
+      background: rgba(15,98,254,.18);
+      border: 1px solid rgba(78,131,255,.30);
+      border-radius: var(--radius-full);
+      padding: 5px 14px;
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--blue-30);
+      letter-spacing: .9px;
+      text-transform: uppercase;
+      margin-bottom: var(--sp-4);
+    }
+    .granite__title {
+      font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -1px;
+      line-height: 1.15;
+      margin-bottom: var(--sp-5);
+    }
+    .granite__title span {
+      background: linear-gradient(100deg, #78a9ff 0%, #a8c8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .granite__desc {
+      font-size: 1rem;
+      color: rgba(255,255,255,.60);
+      line-height: 1.8;
+      margin-bottom: var(--sp-8);
+    }
+    .granite__chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-2);
+    }
+    .granite__chip {
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      font-size: .78rem;
+      font-weight: 700;
+      border: 1px solid rgba(78,131,255,.32);
+      background: rgba(15,98,254,.12);
+      color: var(--blue-30);
+      letter-spacing: .3px;
+      transition: background var(--ease), border-color var(--ease), transform var(--ease);
+    }
+    .granite__chip:hover { background: rgba(15,98,254,.25); border-color: rgba(78,131,255,.55); transform: translateY(-2px); }
+
+    /* Right panel */
+    .granite__panel {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: var(--radius-2xl);
+      padding: var(--sp-10);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 0 0 1px rgba(120,169,255,.08) inset;
+    }
+    .granite__panel-title {
+      font-size: .8rem;
+      font-weight: 700;
+      color: rgba(255,255,255,.35);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: var(--sp-6);
+    }
+    .granite__feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-4);
+      margin-bottom: var(--sp-8);
+    }
+    .granite__feature {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--sp-3);
+    }
+    .granite__feature-icon {
+      width: 34px; height: 34px;
+      border-radius: var(--radius-md);
+      background: rgba(15,98,254,.20);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: .9rem;
+      color: var(--blue-30);
+    }
+    .granite__feature-text strong {
+      display: block;
+      font-size: .9rem;
+      font-weight: 600;
+      color: rgba(255,255,255,.88);
+      margin-bottom: 2px;
+    }
+    .granite__feature-text span {
+      font-size: .82rem;
+      color: rgba(255,255,255,.42);
+    }
+
+    /* ── Testimonials ───────────────────────────────────────── */
+    .testimonials {
+      padding: var(--sp-20) 0;
+      background: var(--color-bg);
+    }
+    .testimonials__header {
+      text-align: center;
+      margin-bottom: var(--sp-12);
+    }
+    .testimonials__grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-6);
+    }
+    .testi-card {
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--sp-8);
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-5);
+      transition: transform var(--ease-out), box-shadow var(--ease-out);
+    }
+    .testi-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+    .testi-card__stars {
+      display: flex;
+      gap: 3px;
+      color: var(--yellow-30);
+      font-size: .9rem;
+    }
+    .testi-card__quote {
+      font-size: .9625rem;
+      line-height: 1.78;
+      color: var(--color-text);
+      flex: 1;
+      font-style: italic;
+    }
+    .testi-card__quote::before { content: '\201C'; }
+    .testi-card__quote::after  { content: '\201D'; }
+    .testi-card__reviewer {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      padding-top: var(--sp-4);
+      border-top: 1px solid var(--color-border);
+    }
+    .testi-card__avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--white);
+      flex-shrink: 0;
+    }
+    .testi-card__avatar--a { background: linear-gradient(135deg, var(--blue-60), var(--blue-40)); }
+    .testi-card__avatar--b { background: linear-gradient(135deg, var(--violet), #8a3ffc); }
+    .testi-card__avatar--c { background: linear-gradient(135deg, var(--teal), var(--cyan)); }
+    .testi-card__name {
+      font-size: .8875rem;
+      font-weight: 700;
+      color: var(--color-text);
+    }
+    .testi-card__role {
+      font-size: .8rem;
+      color: var(--color-text-muted);
+    }
+    .testi-card__uni {
+      font-size: .72rem;
+      color: var(--color-primary);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ── CTA band ───────────────────────────────────────────── */
+    .cta-band {
+      padding: var(--sp-24) 0;
+      background: linear-gradient(140deg, #dae8ff 0%, #e8f1ff 35%, #edf5ff 65%, #d4e5ff 100%);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    [data-theme="dark"] .cta-band {
+      background: linear-gradient(140deg, #0a1628 0%, #0c1c3c 50%, #0e2050 100%);
+    }
+    .cta-band::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 55% 55% at 15% 50%, rgba(15,98,254,.10) 0%, transparent 55%),
+        radial-gradient(ellipse 45% 45% at 85% 50%, rgba(105,41,196,.07) 0%, transparent 55%);
+      pointer-events: none;
+    }
+    .cta-band__inner { position: relative; z-index: 1; }
+    .cta-band__title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      color: var(--blue-70);
+      letter-spacing: -1px;
+      margin-bottom: var(--sp-4);
+    }
+    [data-theme="dark"] .cta-band__title { color: var(--white); }
+    .cta-band__sub {
+      font-size: 1.0625rem;
+      color: var(--blue-60);
+      max-width: 520px;
+      margin: 0 auto var(--sp-8);
+      line-height: 1.75;
+      opacity: .8;
+    }
+    [data-theme="dark"] .cta-band__sub { color: rgba(255,255,255,.65); }
+    .cta-band__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-3);
+      justify-content: center;
+    }
+
+    /* ── SVG hero illustration overrides ────────────────────── */
+    .hero__svg { filter: drop-shadow(0 0 40px rgba(15,98,254,.35)); }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 1020px) {
+      .hero__inner { grid-template-columns: 1fr; text-align: center; }
+      .hero__subtitle { margin: 0 auto var(--sp-8); }
+      .hero__cta { justify-content: center; }
+      .hero__proof { justify-content: center; }
+      .hero__visual { display: none; }
+      .granite__inner { grid-template-columns: 1fr; }
+      .granite__panel { display: none; }
+    }
+    @media (max-width: 800px) {
+      .stats-strip__grid { grid-template-columns: repeat(2, 1fr); }
+      .features__grid { grid-template-columns: repeat(2, 1fr); }
+      .testimonials__grid { grid-template-columns: 1fr; max-width: 500px; margin: 0 auto; }
+    }
+    @media (max-width: 640px) {
+      .stats-strip__grid { grid-template-columns: repeat(2, 1fr); gap: var(--sp-4); }
+      .features__grid { grid-template-columns: 1fr; }
+      .how__steps { grid-template-columns: 1fr 1fr; }
+      .how__steps::before { display: none; }
+      .cta-band__title { font-size: 1.75rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════════════════════════════════
+       NAVIGATION
+       ════════════════════════════════════════════════════════════ -->
+  <nav class="nav" id="nav" role="navigation" aria-label="Main navigation">
+    <div class="container">
+      <div class="nav__inner">
+
+        <!-- Logo -->
+        <a href="index.html" class="nav__logo" aria-label="Smart Study Generator — Home">
+          <span class="nav__logo-badge">IBM</span>
+          <span class="nav__logo-text">Smart Study Generator</span>
+        </a>
+
+        <!-- Links -->
+        <ul class="nav__links" role="list">
+          <li><a href="index.html"              class="nav__link">Home</a></li>
+          <li><a href="pages/upload.html"       class="nav__link">Upload Notes</a></li>
+          <li><a href="pages/chat.html"         class="nav__link">AI Chat</a></li>
+          <li><a href="pages/quiz.html"         class="nav__link">Quiz</a></li>
+          <li><a href="pages/flashcards.html"   class="nav__link">Flashcards</a></li>
+          <li><a href="pages/planner.html"      class="nav__link">Study Planner</a></li>
+          <li><a href="pages/dashboard.html"    class="nav__link">Dashboard</a></li>
+          <li><a href="pages/about.html"        class="nav__link">About</a></li>
+          <li><a href="pages/contact.html"      class="nav__link">Contact</a></li>
+        </ul>
+
+        <!-- Actions -->
+        <div class="nav__actions">
+          <button class="nav__theme-btn" id="themeToggle" aria-label="Toggle dark/light mode">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+          <a href="pages/dashboard.html" class="btn btn-primary btn-sm">Get Started</a>
+          <!-- Mobile toggle -->
+          <button class="nav__toggle" id="navToggle" aria-label="Open mobile menu" aria-expanded="false">
+            <span class="nav__toggle-bar"></span>
+            <span class="nav__toggle-bar"></span>
+            <span class="nav__toggle-bar"></span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div class="nav__mobile" role="menu">
+      <a href="index.html"            class="nav__link" role="menuitem">Home</a>
+      <a href="pages/upload.html"     class="nav__link" role="menuitem">Upload Notes</a>
+      <a href="pages/chat.html"       class="nav__link" role="menuitem">AI Chat</a>
+      <a href="pages/quiz.html"       class="nav__link" role="menuitem">Quiz</a>
+      <a href="pages/flashcards.html" class="nav__link" role="menuitem">Flashcards</a>
+      <a href="pages/planner.html"    class="nav__link" role="menuitem">Study Planner</a>
+      <a href="pages/dashboard.html"  class="nav__link" role="menuitem">Dashboard</a>
+      <a href="pages/about.html"      class="nav__link" role="menuitem">About</a>
+      <a href="pages/contact.html"    class="nav__link" role="menuitem">Contact</a>
+    </div>
+  </nav>
+
+
+  <!-- ════════════════════════════════════════════════════════════
+       A) HERO
+       ════════════════════════════════════════════════════════════ -->
+  <section class="hero" aria-label="Hero — Smart Study Generator Agent">
+    <div class="hero__grid" aria-hidden="true"></div>
+    <div class="hero__glow hero__glow--a" aria-hidden="true"></div>
+    <div class="hero__glow hero__glow--b" aria-hidden="true"></div>
+    <div class="hero__glow hero__glow--c" aria-hidden="true"></div>
+
+    <div class="container">
+      <div class="hero__inner">
+
+        <!-- Left: copy -->
+        <div class="hero__copy">
+
+          <span class="hero__badge">
+            <span class="hero__badge-dot" aria-hidden="true"></span>
+            IBM University Engagement
+          </span>
+
+          <h1 class="hero__title">
+            Smart Study<br />
+            <span class="hero__title-accent">Generator Agent</span>
+          </h1>
+
+          <p class="hero__subtitle">
+            Your AI-powered study companion that transforms raw notes into crisp summaries,
+            adaptive quizzes, flashcard decks, and personalised study plans — all
+            driven by IBM Granite 3.3 on watsonx.ai.
+          </p>
+
+          <div class="hero__cta">
+            <a href="pages/dashboard.html" class="btn btn-primary btn-lg">
+              <i class="fa-solid fa-rocket"></i> Start Learning Free
+            </a>
+            <a href="pages/upload.html" class="btn btn-outline btn-lg" style="color:rgba(255,255,255,.9);border-color:rgba(255,255,255,.35);">
+              <i class="fa-solid fa-circle-play"></i> Watch Demo
+            </a>
+          </div>
+
+          <!-- Social proof -->
+          <div class="hero__proof">
+            <div class="hero__avatars" aria-label="Student avatars">
+              <div class="hero__avatar"          aria-label="Student AG">AG</div>
+              <div class="hero__avatar hero__avatar--b" aria-label="Student PM">PM</div>
+              <div class="hero__avatar hero__avatar--c" aria-label="Student SK">SK</div>
+              <div class="hero__avatar hero__avatar--d" aria-label="Student LR">LR</div>
+            </div>
+            <p class="hero__proof-text">
+              <strong>Trusted by 15,000+ students</strong><br />
+              across IBM Partner Universities
+            </p>
+          </div>
+
+        </div><!-- /.hero__copy -->
+
+        <!-- Right: SVG illustration -->
+        <div class="hero__visual" aria-hidden="true">
+          <div class="hero__visual-wrap">
+            <svg class="hero__svg" viewBox="0 0 400 350" width="400" height="350"
+                 xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AI neural brain illustration">
+              <defs>
+                <radialGradient id="bg-glow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stop-color="#0f62fe" stop-opacity=".18"/>
+                  <stop offset="100%" stop-color="#0f62fe" stop-opacity="0"/>
+                </radialGradient>
+                <radialGradient id="node-grad" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stop-color="#4589ff"/>
+                  <stop offset="100%" stop-color="#0043ce"/>
+                </radialGradient>
+                <radialGradient id="core-grad" cx="35%" cy="25%" r="70%">
+                  <stop offset="0%" stop-color="#78a9ff"/>
+                  <stop offset="100%" stop-color="#0f62fe"/>
+                </radialGradient>
+                <radialGradient id="doc-grad" cx="30%" cy="25%" r="75%">
+                  <stop offset="0%" stop-color="#2b5ce6"/>
+                  <stop offset="100%" stop-color="#001d6c"/>
+                </radialGradient>
+                <filter id="glow-filter" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <filter id="soft-glow" x="-80%" y="-80%" width="260%" height="260%">
+                  <feGaussianBlur stdDeviation="8" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+                <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#4589ff" stop-opacity=".9"/>
+                  <stop offset="100%" stop-color="#78a9ff" stop-opacity=".3"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Background glow -->
+              <ellipse cx="200" cy="175" rx="170" ry="148" fill="url(#bg-glow)"/>
+
+              <!-- Document base -->
+              <rect x="120" y="60" width="130" height="165" rx="12" fill="url(#doc-grad)" opacity=".92"/>
+              <rect x="120" y="60" width="130" height="165" rx="12" fill="none"
+                    stroke="rgba(120,169,255,.45)" stroke-width="1.5"/>
+              <!-- Doc fold -->
+              <path d="M220 60 L250 90 L220 90 Z" fill="#001d6c" opacity=".7"/>
+              <path d="M220 60 L250 90" stroke="rgba(120,169,255,.5)" stroke-width="1"/>
+              <!-- Doc lines -->
+              <line x1="140" y1="106" x2="228" y2="106" stroke="rgba(120,169,255,.5)" stroke-width="2" stroke-linecap="round"/>
+              <line x1="140" y1="120" x2="224" y2="120" stroke="rgba(120,169,255,.3)" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="140" y1="134" x2="220" y2="134" stroke="rgba(120,169,255,.3)" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="140" y1="148" x2="218" y2="148" stroke="rgba(120,169,255,.25)" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="140" y1="162" x2="215" y2="162" stroke="rgba(120,169,255,.25)" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="140" y1="176" x2="222" y2="176" stroke="rgba(120,169,255,.2)" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="140" y1="190" x2="200" y2="190" stroke="rgba(120,169,255,.2)" stroke-width="1.5" stroke-linecap="round"/>
+
+              <!-- Neural network connections (background) -->
+              <g stroke="url(#line-grad)" stroke-width="1" fill="none" opacity=".55">
+                <line x1="200" y1="175" x2="108" y2="120"/>
+                <line x1="200" y1="175" x2="108" y2="230"/>
+                <line x1="200" y1="175" x2="292" y2="120"/>
+                <line x1="200" y1="175" x2="292" y2="230"/>
+                <line x1="200" y1="175" x2="200" y2="80"/>
+                <line x1="200" y1="175" x2="200" y2="270"/>
+                <line x1="108" y1="120" x2="55"  y2="90"/>
+                <line x1="108" y1="120" x2="55"  y2="150"/>
+                <line x1="108" y1="230" x2="55"  y2="200"/>
+                <line x1="108" y1="230" x2="55"  y2="270"/>
+                <line x1="292" y1="120" x2="345" y2="90"/>
+                <line x1="292" y1="120" x2="345" y2="150"/>
+                <line x1="292" y1="230" x2="345" y2="200"/>
+                <line x1="292" y1="230" x2="345" y2="270"/>
+              </g>
+
+              <!-- Animated pulse lines -->
+              <g stroke="#4589ff" stroke-width="1.5" fill="none" opacity=".7">
+                <line x1="200" y1="175" x2="108" y2="120" stroke-dasharray="6 4">
+                  <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1.8s" repeatCount="indefinite"/>
+                </line>
+                <line x1="200" y1="175" x2="292" y2="230" stroke-dasharray="6 4">
+                  <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="2.2s" repeatCount="indefinite"/>
+                </line>
+                <line x1="108" y1="120" x2="55" y2="90" stroke-dasharray="4 6">
+                  <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="1.5s" repeatCount="indefinite"/>
+                </line>
+              </g>
+
+              <!-- Midpoint / relay nodes -->
+              <g filter="url(#glow-filter)">
+                <circle cx="108" cy="120" r="9"  fill="url(#node-grad)" stroke="rgba(120,169,255,.6)" stroke-width="1.5"/>
+                <circle cx="108" cy="230" r="9"  fill="url(#node-grad)" stroke="rgba(120,169,255,.6)" stroke-width="1.5"/>
+                <circle cx="292" cy="120" r="9"  fill="url(#node-grad)" stroke="rgba(120,169,255,.6)" stroke-width="1.5"/>
+                <circle cx="292" cy="230" r="9"  fill="url(#node-grad)" stroke="rgba(120,169,255,.6)" stroke-width="1.5"/>
+                <circle cx="200" cy="80"  r="7"  fill="#4589ff"         stroke="rgba(120,169,255,.5)" stroke-width="1.5"/>
+                <circle cx="200" cy="270" r="7"  fill="#4589ff"         stroke="rgba(120,169,255,.5)" stroke-width="1.5"/>
+              </g>
+
+              <!-- Outer leaf nodes -->
+              <g fill="#78a9ff" opacity=".75">
+                <circle cx="55"  cy="90"  r="5"/>
+                <circle cx="55"  cy="150" r="5"/>
+                <circle cx="55"  cy="200" r="5"/>
+                <circle cx="55"  cy="270" r="5"/>
+                <circle cx="345" cy="90"  r="5"/>
+                <circle cx="345" cy="150" r="5"/>
+                <circle cx="345" cy="200" r="5"/>
+                <circle cx="345" cy="270" r="5"/>
+              </g>
+
+              <!-- Central AI brain core -->
+              <circle cx="200" cy="175" r="46" fill="rgba(15,98,254,.14)" filter="url(#soft-glow)"/>
+              <circle cx="200" cy="175" r="38" fill="url(#core-grad)" stroke="rgba(120,169,255,.7)" stroke-width="2"/>
+              <!-- Pulse ring -->
+              <circle cx="200" cy="175" r="38" fill="none" stroke="rgba(120,169,255,.4)" stroke-width="6">
+                <animate attributeName="r" values="38;52;38" dur="2.8s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values=".4;0;.4" dur="2.8s" repeatCount="indefinite"/>
+              </circle>
+
+              <!-- Brain / AI symbol inside core -->
+              <text x="200" y="183" text-anchor="middle" font-size="28" fill="white" font-family="serif"
+                    filter="url(#glow-filter)">🧠</text>
+
+              <!-- Sparkle accents -->
+              <g fill="#f1c21b" opacity=".85" filter="url(#glow-filter)">
+                <!-- Top-right sparkle -->
+                <polygon points="316,52 319,61 328,61 321,67 324,76 316,70 308,76 311,67 304,61 313,61"
+                         transform="scale(.75) translate(108,18)"/>
+                <!-- Bottom-left sparkle (small) -->
+                <polygon points="72,295 74,301 80,301 75,305 77,311 72,307 67,311 69,305 64,301 70,301"
+                         transform="scale(.6) translate(48,52)"/>
+              </g>
+
+              <!-- IBM label -->
+              <g>
+                <rect x="158" y="308" width="84" height="24" rx="12"
+                      fill="rgba(15,98,254,.22)" stroke="rgba(78,131,255,.5)" stroke-width="1"/>
+                <text x="200" y="325" text-anchor="middle" font-size="10" font-weight="700"
+                      fill="rgba(120,169,255,.9)" font-family="IBM Plex Mono,monospace" letter-spacing="2">IBM GRANITE</text>
+              </g>
+            </svg>
+          </div>
+        </div><!-- /.hero__visual -->
+
+      </div><!-- /.hero__inner -->
+    </div><!-- /.container -->
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════
+       B) STATS STRIP
+       ════════════════════════════════════════════════════════════ -->
+  <section class="stats-strip" aria-label="Key statistics">
+    <div class="container">
+      <div class="stats-strip__grid">
+
+        <div class="stat-card" data-reveal>
+          <div class="stat-card__icon"><i class="fa-solid fa-users" aria-hidden="true"></i></div>
+          <div class="stat-card__number">
+            <span data-count="15000" data-suffix="+">0+</span>
+          </div>
+          <div class="stat-card__label">Active Students</div>
+        </div>
+
+        <div class="stat-card" data-reveal data-reveal-delay="1">
+          <div class="stat-card__icon"><i class="fa-solid fa-bullseye" aria-hidden="true"></i></div>
+          <div class="stat-card__number">
+            <span data-count="98" data-suffix="%">0%</span>
+          </div>
+          <div class="stat-card__label">AI Accuracy</div>
+        </div>
+
+        <div class="stat-card" data-reveal data-reveal-delay="2">
+          <div class="stat-card__icon"><i class="fa-solid fa-file-lines" aria-hidden="true"></i></div>
+          <div class="stat-card__number">
+            <span data-count="50000" data-suffix="+">0+</span>
+          </div>
+          <div class="stat-card__label">Summaries Generated</div>
+        </div>
+
+        <div class="stat-card" data-reveal data-reveal-delay="3">
+          <div class="stat-card__icon"><i class="fa-solid fa-cubes" aria-hidden="true"></i></div>
+          <div class="stat-card__number">
+            <span data-count="6">0</span>
+          </div>
+          <div class="stat-card__label">AI Modules</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════
+       C) FEATURES
+       ════════════════════════════════════════════════════════════ -->
+  <section class="features" id="features" aria-labelledby="features-title">
+    <div class="container">
+      <header class="features__header">
+        <p class="section-label" data-reveal>Core Features</p>
+        <h2 class="section-title" id="features-title" data-reveal data-reveal-delay="1">
+          Everything You Need to Excel
+        </h2>
+        <p class="section-subtitle" data-reveal data-reveal-delay="2">
+          Six tightly integrated AI modules, all powered by IBM Granite, working together
+          to take you from raw notes to exam-ready in record time.
+        </p>
+      </header>
+
+      <div class="features__grid">
+
+        <!-- 1 – Upload PDF Notes -->
+        <a href="pages/upload.html" class="feat-card feat-card--1" data-reveal>
+          <div class="feat-card__icon-wrap" aria-hidden="true">
+            <i class="fa-solid fa-file-pdf"></i>
+          </div>
+          <h3 class="feat-card__title">Upload PDF Notes</h3>
+          <p class="feat-card__desc">
+            Drag-and-drop your lecture PDFs, handwritten scans, or typed notes.
+            Our parser extracts every concept instantly.
+          </p>
+          <span class="feat-card__link" aria-label="Learn more about Upload PDF Notes">
+            Learn more <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </span>
+        </a>
+
+        <!-- 2 – AI Chat -->
+        <a href="pages/chat.html" class="feat-card feat-card--2" data-reveal data-reveal-delay="1">
+          <div class="feat-card__icon-wrap" aria-hidden="true">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <h3 class="feat-card__title">AI Chat</h3>
+          <p class="feat-card__desc">
+            Ask questions about your uploaded notes and get contextual answers
+            from IBM Granite in natural language — no copy-pasting required.
+          </p>
+          <span class="feat-card__link" aria-label="Learn more about AI Chat">
+            Learn more <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </span>
+        </a>
+
+        <!-- 3 – Quiz Generator -->
+        <a href="pages/quiz.html" class="feat-card feat-card--3" data-reveal data-reveal-delay="2">
+          <div class="feat-card__icon-wrap" aria-hidden="true">
+            <i class="fa-solid fa-circle-question"></i>
+          </div>
+          <h3 class="feat-card__title">Quiz Generator</h3>
+          <p class="feat-card__desc">
+            Auto-generate multiple-choice and short-answer quizzes calibrated to your
+            notes. Instant feedback reinforces the concepts that matter most.
+          </p>
+          <span class="feat-card__link" aria-label="Learn more about Quiz Generator">
+            Learn more <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </span>
+        </a>
+
+        <!-- 4 – Flashcards -->
+        <a href="pages/flashcards.html" class="feat-card feat-card--4" data-reveal data-reveal-delay="3">
+          <div class="feat-card__icon-wrap" aria-hidden="true">
+            <i class="fa-solid fa-clone"></i>
+          </div>
+          <h3 class="feat-card__title">Flashcards</h3>
+          <p class="feat-card__desc">
+            Turn key terms, definitions, and formulas into spaced-repetition flashcard
+            decks you can review on any device, any time.
+          </p>
+          <span class="feat-card__link" aria-label="Learn more about Flashcards">
+            Learn more <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </span>
+        </a>
+
+        <!-- 5 – Study Planner -->
+        <a href="pages/planner.html" class="feat-card feat-card--5" data-reveal data-reveal-delay="4">
+          <div class="feat-card__icon-wrap" aria-hidden="true">
+            <i class="fa-solid fa-calendar-days"></i>
+          </div>
+          <h3 class="feat-card__title">Study Planner</h3>
+          <p class="feat-card__desc">
+            Set your exam date and let the AI build a day-by-day revision schedule
+            that adapts to your quiz performance and available hours.
+          </p>
+          <span class="feat-card__link" aria-label="Learn more about Study Planner">
+            Learn more <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </span>
+        </a>
+
+        <!-- 6 – Progress Dashboard -->
+        <a href="pages/dashboard.html" class="feat-card feat-card--6" data-reveal data-reveal-delay="5">
+          <div class="feat-card__icon-wrap" aria-hidden="true">
+            <i class="fa-solid fa-chart-line"></i>
+          </div>
+          <h3 class="feat-card__title">Progress Dashboard</h3>
+          <p class="feat-card__desc">
+            Track accuracy trends, streak data, topics mastered, and time studied
+            across all modules — all in one unified analytics view.
+          </p>
+          <span class="feat-card__link" aria-label="Learn more about Progress Dashboard">
+            Learn more <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+          </span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════
+       D) HOW IT WORKS
+       ════════════════════════════════════════════════════════════ -->
+  <section class="how" id="how-it-works" aria-labelledby="how-title">
+    <div class="container">
+      <header class="how__header">
+        <p class="section-label" data-reveal>Simple Process</p>
+        <h2 class="section-title" id="how-title" data-reveal data-reveal-delay="1">
+          How It Works
+        </h2>
+        <p class="section-subtitle" data-reveal data-reveal-delay="2">
+          From first upload to exam confidence in four seamless steps.
+        </p>
+      </header>
+
+      <div class="how__steps">
+
+        <div class="step-card" data-reveal>
+          <div class="step-card__num">
+            <i class="fa-solid fa-upload" aria-hidden="true"></i>
+          </div>
+          <h3 class="step-card__title">Upload</h3>
+          <p class="step-card__desc">
+            Drop your PDFs or typed notes into the upload module.
+            Supports multi-file uploads up to 50 MB.
+          </p>
+          <span class="step-card__badge">Step 01</span>
+        </div>
+
+        <div class="step-card" data-reveal data-reveal-delay="1">
+          <div class="step-card__num">
+            <i class="fa-solid fa-brain" aria-hidden="true"></i>
+          </div>
+          <h3 class="step-card__title">AI Analysis</h3>
+          <p class="step-card__desc">
+            IBM Granite 3.3 reads, comprehends, and indexes every concept
+            from your material using RAG-enhanced reasoning.
+          </p>
+          <span class="step-card__badge">Step 02</span>
+        </div>
+
+        <div class="step-card" data-reveal data-reveal-delay="2">
+          <div class="step-card__num">
+            <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+          </div>
+          <h3 class="step-card__title">Generate</h3>
+          <p class="step-card__desc">
+            Receive AI-crafted summaries, quizzes, flashcards, and a
+            personalised study schedule with a single click.
+          </p>
+          <span class="step-card__badge">Step 03</span>
+        </div>
+
+        <div class="step-card" data-reveal data-reveal-delay="3">
+          <div class="step-card__num">
+            <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+          </div>
+          <h3 class="step-card__title">Track</h3>
+          <p class="step-card__desc">
+            Monitor your improvement over time, revisit weak spots, and
+            celebrate streaks on your progress dashboard.
+          </p>
+          <span class="step-card__badge">Step 04</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════
+       E) IBM GRANITE
+       ════════════════════════════════════════════════════════════ -->
+  <section class="granite" id="granite" aria-labelledby="granite-title">
+    <div class="granite__bg-grid" aria-hidden="true"></div>
+    <div class="container">
+      <div class="granite__inner">
+
+        <!-- Left: content -->
+        <div data-reveal>
+          <div class="granite__icon" aria-hidden="true">🧠</div>
+          <p class="granite__label">
+            <i class="fa-solid fa-microchip" aria-hidden="true"></i> Powered by
+          </p>
+          <h2 class="granite__title" id="granite-title">
+            IBM Granite 3.3<br />
+            <span>Foundation Model</span>
+          </h2>
+          <p class="granite__desc">
+            Smart Study Generator is built on IBM's Granite 3.3 8B open-source language model,
+            accessed through watsonx.ai. With Retrieval-Augmented Generation (RAG), the model
+            grounds every answer strictly in your uploaded content — providing accurate,
+            hallucination-resistant responses you can trust for exam preparation.
+          </p>
+          <div class="granite__chips" role="list" aria-label="Technology chips">
+            <span class="granite__chip" role="listitem">Granite 3.3 8B</span>
+            <span class="granite__chip" role="listitem">watsonx.ai</span>
+            <span class="granite__chip" role="listitem">RAG Enabled</span>
+            <span class="granite__chip" role="listitem">Enterprise-Grade</span>
+            <span class="granite__chip" role="listitem">Responsible AI</span>
+          </div>
+          <div style="margin-top:var(--sp-8)">
+            <a href="pages/chat.html" class="btn btn-white">
+              <i class="fa-solid fa-robot"></i> Try Granite AI
+            </a>
+          </div>
+        </div>
+
+        <!-- Right: capability panel -->
+        <div class="granite__panel" data-reveal data-reveal-delay="2">
+          <p class="granite__panel-title">What Granite powers</p>
+          <ul class="granite__feature-list">
+            <li class="granite__feature">
+              <div class="granite__feature-icon" aria-hidden="true">
+                <i class="fa-solid fa-file-lines"></i>
+              </div>
+              <div class="granite__feature-text">
+                <strong>Intelligent Summarisation</strong>
+                <span>Condenses lectures into precise bullet-point summaries</span>
+              </div>
+            </li>
+            <li class="granite__feature">
+              <div class="granite__feature-icon" aria-hidden="true">
+                <i class="fa-solid fa-circle-question"></i>
+              </div>
+              <div class="granite__feature-text">
+                <strong>Contextual Q&amp;A</strong>
+                <span>Answers questions using only your uploaded notes as context</span>
+              </div>
+            </li>
+            <li class="granite__feature">
+              <div class="granite__feature-icon" aria-hidden="true">
+                <i class="fa-solid fa-clone"></i>
+              </div>
+              <div class="granite__feature-text">
+                <strong>Flashcard Generation</strong>
+                <span>Extracts key term–definition pairs automatically</span>
+              </div>
+            </li>
+            <li class="granite__feature">
+              <div class="granite__feature-icon" aria-hidden="true">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <div class="granite__feature-text">
+                <strong>Responsible AI</strong>
+                <span>IBM's AI ethics principles baked in by design</span>
+              </div>
+            </li>
+          </ul>
+          <a href="https://www.ibm.com/granite" target="_blank" rel="noopener noreferrer"
+             class="btn btn-outline"
+             style="color:var(--blue-30);border-color:rgba(78,131,255,.45);width:100%;justify-content:center">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Learn about IBM Granite
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════
+       F) TESTIMONIALS
+       ════════════════════════════════════════════════════════════ -->
+  <section class="testimonials" id="testimonials" aria-labelledby="testi-title">
+    <div class="container">
+      <header class="testimonials__header">
+        <p class="section-label" data-reveal>Student Reviews</p>
+        <h2 class="section-title" id="testi-title" data-reveal data-reveal-delay="1">
+          What Students Are Saying
+        </h2>
+        <p class="section-subtitle" data-reveal data-reveal-delay="2">
+          Real feedback from students using Smart Study Generator at IBM Partner Universities.
+        </p>
+      </header>
+
+      <div class="testimonials__grid">
+
+        <!-- Testimonial 1 -->
+        <article class="testi-card" data-reveal>
+          <div class="testi-card__stars" aria-label="5 out of 5 stars">
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+          </div>
+          <p class="testi-card__quote">
+            The AI summary feature saved me hours before finals. I uploaded a 90-page
+            lecture PDF and had a crisp 2-page outline in under a minute. The quiz it
+            generated from that outline helped me identify exactly which topics needed
+            more revision. This is genuinely the most useful study tool I have used.
+          </p>
+          <footer class="testi-card__reviewer">
+            <div class="testi-card__avatar testi-card__avatar--a" aria-label="CS Student avatar">CS</div>
+            <div>
+              <p class="testi-card__name">Computer Science Student</p>
+              <p class="testi-card__role">Final Year — Data Structures &amp; Algorithms</p>
+              <p class="testi-card__uni">
+                <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
+                IBM Partner University
+              </p>
+            </div>
+          </footer>
+        </article>
+
+        <!-- Testimonial 2 -->
+        <article class="testi-card" data-reveal data-reveal-delay="1">
+          <div class="testi-card__stars" aria-label="5 out of 5 stars">
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+          </div>
+          <p class="testi-card__quote">
+            As a data science student, I deal with heavy mathematical content. What
+            impressed me is that the AI Chat stays within my uploaded notes — no
+            hallucinated facts. I asked it to explain Bayes' theorem in context of
+            my specific lecture and it gave a clear, grounded answer instantly.
+          </p>
+          <footer class="testi-card__reviewer">
+            <div class="testi-card__avatar testi-card__avatar--b" aria-label="DS Student avatar">DS</div>
+            <div>
+              <p class="testi-card__name">Data Science Student</p>
+              <p class="testi-card__role">Second Year — Machine Learning Module</p>
+              <p class="testi-card__uni">
+                <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
+                IBM Partner University
+              </p>
+            </div>
+          </footer>
+        </article>
+
+        <!-- Testimonial 3 -->
+        <article class="testi-card" data-reveal data-reveal-delay="2">
+          <div class="testi-card__stars" aria-label="5 out of 5 stars">
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+          </div>
+          <p class="testi-card__quote">
+            The Study Planner is fantastic. I set my exam three weeks out and the AI
+            blocked out daily revision sessions weighted toward the topics where my
+            quiz scores were lowest. My grades improved significantly once I stopped
+            re-reading notes and started using structured active recall through this platform.
+          </p>
+          <footer class="testi-card__reviewer">
+            <div class="testi-card__avatar testi-card__avatar--c" aria-label="ENG Student avatar">EG</div>
+            <div>
+              <p class="testi-card__name">Engineering Student</p>
+              <p class="testi-card__role">Third Year — Electrical Systems</p>
+              <p class="testi-card__uni">
+                <i class="fa-solid fa-building-columns" aria-hidden="true"></i>
+                IBM Partner University
+              </p>
+            </div>
+          </footer>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════
+       G) CTA BAND
+       ════════════════════════════════════════════════════════════ -->
+  <section class="cta-band" aria-labelledby="cta-title">
+    <div class="container">
+      <div class="cta-band__inner">
+        <h2 class="cta-band__title" id="cta-title" data-reveal>
+          Ready to Study Smarter?
+        </h2>
+        <p class="cta-band__sub" data-reveal data-reveal-delay="1">
+          Join 15,000+ students who are already using AI-powered tools to
+          save time, reduce exam stress, and achieve better results.
+        </p>
+        <div class="cta-band__actions" data-reveal data-reveal-delay="2">
+          <a href="pages/dashboard.html" class="btn btn-primary btn-lg">
+            <i class="fa-solid fa-rocket"></i> Get Started Free
+          </a>
+          <a href="#features" class="btn btn-outline btn-lg">
+            <i class="fa-solid fa-grid-2"></i> Explore Features
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════════════════════════════════
+       H) FOOTER
+       ════════════════════════════════════════════════════════════ -->
+  <footer class="footer" role="contentinfo" aria-label="Site footer">
+    <div class="container">
+      <div class="footer__grid">
+
+        <!-- Brand column -->
+        <div>
+          <div class="footer__brand-logo">
+            <span class="footer__ibm-badge">IBM</span>
+            <span class="footer__brand-name">Smart Study Generator</span>
+          </div>
+          <p class="footer__brand-desc">
+            An IBM University Engagement project delivering AI-powered study tools
+            to students worldwide through watsonx.ai and IBM Granite technology.
+          </p>
+        </div>
+
+        <!-- Features column -->
+        <div>
+          <p class="footer__col-title">Features</p>
+          <ul class="footer__col-links" role="list">
+            <li><a href="pages/upload.html">Upload Notes</a></li>
+            <li><a href="pages/chat.html">AI Chat</a></li>
+            <li><a href="pages/quiz.html">Quiz Generator</a></li>
+            <li><a href="pages/flashcards.html">Flashcards</a></li>
+            <li><a href="pages/planner.html">Study Planner</a></li>
+            <li><a href="pages/dashboard.html">Dashboard</a></li>
+          </ul>
+        </div>
+
+        <!-- Technology column -->
+        <div>
+          <p class="footer__col-title">Technology</p>
+          <ul class="footer__col-links" role="list">
+            <li>
+              <a href="https://www.ibm.com/granite" target="_blank" rel="noopener noreferrer">
+                IBM Granite <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.65rem"></i>
+              </a>
+            </li>
+            <li>
+              <a href="https://www.ibm.com/watsonx" target="_blank" rel="noopener noreferrer">
+                watsonx.ai <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.65rem"></i>
+              </a>
+            </li>
+            <li>
+              <a href="https://cloud.ibm.com" target="_blank" rel="noopener noreferrer">
+                IBM Cloud <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:.65rem"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Project column -->
+        <div>
+          <p class="footer__col-title">Project</p>
+          <ul class="footer__col-links" role="list">
+            <li><a href="pages/about.html">About</a></li>
+            <li><a href="pages/contact.html">Contact</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#granite">IBM Granite</a></li>
+          </ul>
+        </div>
+
+      </div><!-- /.footer__grid -->
+
+      <div class="footer__bottom">
+        <p class="footer__copy">
+          &copy; 2025 Smart Study Generator Agent &mdash;
+          <a href="https://www.ibm.com/university" target="_blank" rel="noopener noreferrer">IBM University Engagement</a> Project
+        </p>
+        <nav class="footer__legal" aria-label="Legal links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Use</a>
+          <a href="pages/about.html">About</a>
+        </nav>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- JS -->
+  <script src="js/app.js"></script>
+</body>
+</html>

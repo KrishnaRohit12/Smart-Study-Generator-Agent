@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="description" content="AI Chat powered by IBM Granite 3.3 — ask anything about your uploaded study materials."/>
+  <meta name="theme-color" content="#0f62fe"/>
+  <title>AI Chat | Smart Study Generator Agent</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+  <link rel="stylesheet" href="../css/global.css"/>
+  <style>
+    html,body{height:100%;overflow:hidden}
+    body{display:flex;flex-direction:column}
+    .chat-shell{display:flex;flex:1;margin-top:var(--nav-h);height:calc(100vh - var(--nav-h));overflow:hidden}
+    /* Sidebar */
+    .chat-sb{width:280px;flex-shrink:0;background:var(--color-bg);border-right:1px solid var(--color-border);
+      display:flex;flex-direction:column;height:100%;overflow:hidden;z-index:200;
+      transition:transform var(--ease-out),box-shadow var(--ease)}
+    .sb-head{display:flex;align-items:center;justify-content:space-between;padding:var(--sp-4) var(--sp-5);
+      border-bottom:1px solid var(--color-border);flex-shrink:0}
+    .sb-brand{display:flex;align-items:center;gap:var(--sp-2);font-weight:700;color:var(--color-text);font-size:.9375rem}
+    .sb-close{width:30px;height:30px;border-radius:var(--radius-full);display:none;align-items:center;justify-content:center;
+      color:var(--color-text-muted);transition:background var(--ease);cursor:pointer}
+    .sb-close:hover{background:var(--color-surface)}
+    .new-chat-btn{display:flex;align-items:center;gap:var(--sp-2);margin:var(--sp-4);padding:var(--sp-3) var(--sp-4);
+      background:linear-gradient(135deg,var(--blue-50),var(--blue-60));color:#fff;border-radius:var(--radius-full);
+      font-size:.875rem;font-weight:600;border:none;cursor:pointer;justify-content:center;
+      transition:box-shadow var(--ease),transform var(--ease-bounce);box-shadow:var(--shadow-blue-sm)}
+    .new-chat-btn:hover{box-shadow:var(--shadow-blue);transform:translateY(-1px)}
+    .sb-body{flex:1;overflow-y:auto;padding:var(--sp-2) 0;scrollbar-width:thin;scrollbar-color:var(--gray-20) transparent}
+    .sb-section-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+      color:var(--gray-40);padding:var(--sp-3) var(--sp-5) var(--sp-2)}
+    .chat-item{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-5);
+      cursor:pointer;transition:background var(--ease);position:relative}
+    .chat-item::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;
+      background:var(--color-primary);border-radius:0 3px 3px 0;opacity:0;transition:opacity var(--ease)}
+    .chat-item:hover,.chat-item.active{background:var(--blue-10)}
+    [data-theme="dark"] .chat-item:hover,[data-theme="dark"] .chat-item.active{background:rgba(15,98,254,.12)}
+    .chat-item.active::before{opacity:1}
+    .ci-icon{color:var(--color-text-muted);font-size:.9375rem;flex-shrink:0}
+    .ci-name{font-size:.875rem;font-weight:500;color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .chat-item.active .ci-name{font-weight:700;color:var(--blue-60)}
+    .ci-time{font-size:.72rem;color:var(--gray-40)}
+    .sb-file{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-5);transition:background var(--ease)}
+    .sb-file:hover{background:var(--color-surface)}
+    .sfi-badge{font-size:.6rem;font-weight:800;padding:3px 7px;border-radius:3px;flex-shrink:0}
+    .sfi-pdf{background:rgba(218,30,40,.1);color:#da1e28}
+    .sfi-docx{background:rgba(15,98,254,.1);color:var(--blue-60)}
+    .sfi-txt{background:rgba(0,157,154,.1);color:#009d9a}
+    .sfi-name{font-size:.8125rem;font-weight:500;color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;display:block}
+    .sfi-size{font-size:.72rem;color:var(--gray-40)}
+    .sfi-status{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:var(--radius-full);flex-shrink:0}
+    .sfi-ready{background:#defbe6;color:#0e6027}
+    .sfi-proc{background:var(--blue-10);color:var(--blue-60);animation:pulse-bg 1.5s ease-in-out infinite}
+    @keyframes pulse-bg{0%,100%{opacity:1}50%{opacity:.6}}
+    .sb-upload-link{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-3) var(--sp-5);
+      font-size:.8125rem;font-weight:600;color:var(--color-primary);transition:color var(--ease)}
+    .sb-upload-link:hover{color:var(--blue-60)}
+    .sb-footer{padding:var(--sp-4) var(--sp-5);border-top:1px solid var(--color-border);flex-shrink:0}
+    .granite-pill{display:flex;align-items:center;gap:var(--sp-3);
+      background:linear-gradient(135deg,#080f1d,#0c1630);border:1px solid rgba(120,169,255,.12);
+      border-radius:var(--radius-lg);padding:var(--sp-3) var(--sp-4);position:relative;
+      box-shadow:0 2px 12px rgba(0,0,0,.25)}
+    .gp-icon{font-size:1.375rem;flex-shrink:0}
+    .gp-name{font-size:.8rem;font-weight:700;color:#fff;display:block}
+    .gp-sub{font-size:.7rem;color:rgba(255,255,255,.45)}
+    .gp-dot{position:absolute;top:10px;right:12px;width:8px;height:8px;border-radius:50%;
+      background:#42be65;box-shadow:0 0 6px #42be65;animation:dot-blink 2.5s ease-in-out infinite}
+    /* Chat main */
+    .chat-main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--color-surface)}
+    .chat-topbar{display:flex;align-items:center;gap:var(--sp-4);padding:var(--sp-4) var(--sp-6);
+      background:var(--color-bg);border-bottom:1px solid var(--color-border);flex-shrink:0;box-shadow:var(--shadow-xs)}
+    .ct-menu{width:36px;height:36px;border-radius:var(--radius-full);display:none;align-items:center;
+      justify-content:center;color:var(--color-text-muted);cursor:pointer;transition:background var(--ease)}
+    .ct-menu:hover{background:var(--color-surface)}
+    .ct-info{flex:1}
+    .ct-title{font-size:.9375rem;font-weight:700;color:var(--color-text);display:block}
+    .ct-sub{font-size:.75rem;color:var(--color-text-muted)}
+    .ct-actions{display:flex;gap:var(--sp-2)}
+    .ct-btn{width:36px;height:36px;border-radius:var(--radius-full);display:flex;align-items:center;
+      justify-content:center;color:var(--color-text-muted);cursor:pointer;border:none;background:none;
+      transition:background var(--ease),color var(--ease)}
+    .ct-btn:hover{background:var(--color-surface);color:var(--color-text)}
+    /* Messages */
+    .chat-msgs{flex:1;overflow-y:auto;padding:var(--sp-8);display:flex;flex-direction:column;
+      gap:var(--sp-5);scrollbar-width:thin;scrollbar-color:var(--gray-20) transparent;scroll-behavior:smooth}
+    .chat-welcome{display:flex;flex-direction:column;align-items:center;text-align:center;
+      padding:var(--sp-12) var(--sp-8);max-width:680px;margin:auto}
+    .cw-icon{font-size:3.5rem;margin-bottom:var(--sp-5);animation:float 3s ease-in-out infinite}
+    .cw-title{font-size:1.875rem;font-weight:700;color:var(--color-text);letter-spacing:-.5px;margin-bottom:var(--sp-3)}
+    .cw-sub{font-size:1rem;color:var(--color-text-muted);max-width:480px;margin:0 auto var(--sp-8);line-height:1.75}
+    .suggestions{display:flex;flex-wrap:wrap;gap:var(--sp-3);justify-content:center}
+    .sug-chip{padding:var(--sp-3) var(--sp-4);background:var(--color-bg);border:1px solid var(--color-border);
+      border-radius:var(--radius-full);font-size:.875rem;font-weight:500;color:var(--color-text);cursor:pointer;
+      transition:background var(--ease),border-color var(--ease),color var(--ease),box-shadow var(--ease),transform var(--ease-bounce);
+      box-shadow:var(--shadow-xs)}
+    .sug-chip:hover{background:var(--blue-10);border-color:var(--blue-30);color:var(--blue-60);
+      box-shadow:var(--shadow-blue-sm);transform:translateY(-2px)}
+    /* Message bubbles */
+    .msg{display:flex;gap:var(--sp-4);animation:fade-up .35s var(--ease-bounce)}
+    .msg-user{align-self:flex-end;flex-direction:row-reverse;max-width:75%}
+    .msg-ai{align-self:flex-start;max-width:85%}
+    .msg-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;margin-top:4px}
+    .msg-user .msg-avatar{background:linear-gradient(135deg,var(--blue-60),var(--blue-40));color:#fff;font-weight:700;font-size:.75rem}
+    .msg-ai .msg-avatar{background:linear-gradient(135deg,#0b1120,#0d1735);border:1px solid rgba(255,255,255,.08)}
+    .msg-content{display:flex;flex-direction:column;gap:4px}
+    .msg-bubble{padding:var(--sp-4) var(--sp-5);font-size:.9375rem;line-height:1.7;word-break:break-word;border-radius:var(--radius-xl)}
+    .msg-user .msg-bubble{background:linear-gradient(135deg,var(--blue-50),var(--blue-60));color:#fff;border-radius:var(--radius-xl) var(--radius-xl) var(--radius-sm) var(--radius-xl);box-shadow:var(--shadow-blue-sm),0 1px 0 rgba(255,255,255,.12) inset}
+    .msg-ai .msg-bubble{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl) var(--radius-xl) var(--radius-xl) var(--radius-sm);box-shadow:var(--shadow-card)}
+    [data-theme="dark"] .msg-ai .msg-bubble{background:var(--color-surface)}
+    .msg-bubble p{margin-bottom:var(--sp-3)}.msg-bubble p:last-child{margin-bottom:0}
+    .msg-bubble strong{font-weight:700}
+    .msg-bubble ul{margin:var(--sp-2) 0 var(--sp-3) var(--sp-4);list-style:disc}
+    .msg-bubble li{margin-bottom:var(--sp-1)}
+    .msg-time{font-size:.72rem;color:var(--gray-40);padding:0 var(--sp-2)}
+    .msg-user .msg-time{text-align:right}
+    .msg-sources{display:flex;flex-wrap:wrap;gap:var(--sp-2);margin-top:var(--sp-2);padding:0 var(--sp-2)}
+    .src-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;
+      background:var(--blue-10);border:1px solid var(--blue-20);border-radius:var(--radius-full);
+      font-size:.72rem;font-weight:600;color:var(--blue-60)}
+    .msg-actions{display:flex;gap:var(--sp-2);opacity:0;transition:opacity var(--ease);padding:0 var(--sp-2)}
+    .msg-ai:hover .msg-actions{opacity:1}
+    .ma-btn{width:28px;height:28px;border-radius:var(--radius-full);background:none;border:none;cursor:pointer;
+      font-size:.85rem;color:var(--gray-40);transition:background var(--ease),color var(--ease)}
+    .ma-btn:hover{background:var(--color-surface);color:var(--color-text)}
+    /* Typing */
+    .typing{display:flex;align-items:center;gap:var(--sp-4);animation:fade-up .3s var(--ease-bounce)}
+    .typing-av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0b1120,#0d1735);
+      border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+    .typing-bub{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl) var(--radius-xl) var(--radius-xl) var(--radius-sm);
+      padding:var(--sp-4) var(--sp-5);display:flex;align-items:center;gap:6px;box-shadow:var(--shadow-card)}
+    .td{width:8px;height:8px;border-radius:50%;background:var(--blue-40);animation:t-bounce 1.4s ease-in-out infinite}
+    .td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+    @keyframes t-bounce{0%,60%,100%{transform:translateY(0);opacity:.6}30%{transform:translateY(-6px);opacity:1}}
+    /* Input bar */
+    .chat-input-bar{padding:var(--sp-4) var(--sp-6) var(--sp-5);background:var(--color-bg);
+      border-top:1px solid var(--color-border);flex-shrink:0}
+    .chat-input-wrap{display:flex;align-items:flex-end;gap:var(--sp-3);background:var(--color-surface);
+      border:1.5px solid var(--color-border);border-radius:var(--radius-2xl);padding:var(--sp-3) var(--sp-4);
+      transition:border-color var(--ease),box-shadow var(--ease)}
+    .chat-input-wrap:focus-within{border-color:var(--blue-40);box-shadow:0 0 0 3px rgba(15,98,254,.12),var(--shadow-blue-sm)}
+    .attach-btn{width:34px;height:34px;border-radius:var(--radius-full);display:flex;align-items:center;
+      justify-content:center;color:var(--color-text-muted);cursor:pointer;flex-shrink:0;
+      transition:background var(--ease),color var(--ease);margin-bottom:2px}
+    .attach-btn:hover{background:var(--blue-10);color:var(--color-primary)}
+    .chat-textarea{flex:1;border:none;outline:none;background:transparent;font-family:var(--font);
+      font-size:.9375rem;color:var(--color-text);resize:none;line-height:1.6;max-height:160px;overflow-y:auto;scrollbar-width:thin}
+    .chat-textarea::placeholder{color:var(--gray-40)}
+    .send-btn{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--blue-50),var(--blue-60));
+      color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:none;cursor:pointer;
+      transition:box-shadow var(--ease),transform var(--ease-bounce),opacity var(--ease);
+      box-shadow:var(--shadow-blue-sm);margin-bottom:2px}
+    .send-btn:hover:not(:disabled){box-shadow:var(--shadow-blue);transform:scale(1.08)}
+    .send-btn:disabled{opacity:.4;cursor:not-allowed}
+    .input-hint{display:flex;justify-content:space-between;font-size:.75rem;color:var(--gray-40);
+      margin-top:var(--sp-2);padding:0 var(--sp-2)}
+    /* Backdrop */
+    .sb-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:499;display:none;backdrop-filter:blur(2px)}
+    .sb-backdrop.show{display:block}
+    @media(max-width:900px){
+      .chat-sb{position:fixed;top:var(--nav-h);left:0;height:calc(100vh - var(--nav-h));transform:translateX(-100%)}
+      .chat-sb.open{transform:translateX(0);box-shadow:var(--shadow-xl)}
+      .sb-close,.ct-menu{display:flex}
+    }
+    @media(max-width:600px){.chat-msgs{padding:var(--sp-5) var(--sp-4)}.chat-input-bar{padding:var(--sp-3) var(--sp-4)}}
+  </style>
+</head>
+<body>
+<header id="nav" class="nav" role="banner">
+  <div class="container nav__inner">
+    <a href="../index.html" class="nav__logo"><span class="nav__logo-badge">IBM</span><span class="nav__logo-text">Smart Study Generator</span></a>
+    <nav class="nav__links">
+      <a href="../index.html" class="nav__link">Home</a>
+      <a href="upload.html" class="nav__link">Upload Notes</a>
+      <a href="chat.html" class="nav__link active">AI Chat</a>
+      <a href="quiz.html" class="nav__link">Quiz</a>
+      <a href="flashcards.html" class="nav__link">Flashcards</a>
+      <a href="planner.html" class="nav__link">Study Planner</a>
+      <a href="dashboard.html" class="nav__link">Dashboard</a>
+      <a href="about.html" class="nav__link">About</a>
+      <a href="contact.html" class="nav__link">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <button class="nav__theme-btn" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <a href="upload.html" class="btn btn-primary btn-sm">Upload Notes</a>
+    </div>
+    <button class="nav__toggle" id="navToggle" aria-expanded="false">
+      <span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span>
+    </button>
+  </div>
+  <nav class="nav__mobile" id="navMobile">
+    <a href="../index.html" class="nav__link">Home</a>
+    <a href="upload.html" class="nav__link">Upload Notes</a>
+    <a href="chat.html" class="nav__link active">AI Chat</a>
+    <a href="quiz.html" class="nav__link">Quiz</a>
+    <a href="flashcards.html" class="nav__link">Flashcards</a>
+    <a href="planner.html" class="nav__link">Study Planner</a>
+    <a href="dashboard.html" class="nav__link">Dashboard</a>
+    <a href="about.html" class="nav__link">About</a>
+    <a href="contact.html" class="nav__link">Contact</a>
+    <a href="upload.html" class="btn btn-primary" style="margin-top:.5rem;justify-content:center;">Upload Notes</a>
+  </nav>
+</header>
+
+<div class="chat-shell">
+  <!-- Sidebar -->
+  <aside class="chat-sb" id="chatSidebar">
+    <div class="sb-head">
+      <div class="sb-brand"><span style="font-size:1.4rem">🧠</span> Granite Chat</div>
+      <button class="sb-close" id="sidebarClose" aria-label="Close sidebar"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <button class="new-chat-btn" id="newChatBtn"><i class="fa-solid fa-plus"></i> New Chat</button>
+    <div class="sb-body">
+      <div class="sb-section-title">Recent Chats</div>
+      <ul id="recentChats" style="list-style:none">
+        <li class="chat-item active" data-id="1">
+          <i class="fa-regular fa-message ci-icon"></i>
+          <div style="flex:1;min-width:0"><div class="ci-name">Machine Learning Notes</div><div class="ci-time">Just now</div></div>
+        </li>
+        <li class="chat-item" data-id="2">
+          <i class="fa-regular fa-message ci-icon"></i>
+          <div style="flex:1;min-width:0"><div class="ci-name">Data Structures Quiz</div><div class="ci-time">2 hours ago</div></div>
+        </li>
+        <li class="chat-item" data-id="3">
+          <i class="fa-regular fa-message ci-icon"></i>
+          <div style="flex:1;min-width:0"><div class="ci-name">Quantum Computing Summary</div><div class="ci-time">Yesterday</div></div>
+        </li>
+        <li class="chat-item" data-id="4">
+          <i class="fa-regular fa-message ci-icon"></i>
+          <div style="flex:1;min-width:0"><div class="ci-name">Linear Algebra Review</div><div class="ci-time">2 days ago</div></div>
+        </li>
+      </ul>
+      <div class="sb-section-title" style="margin-top:var(--sp-4)">Uploaded Files</div>
+      <div class="sb-file"><span class="sfi-badge sfi-pdf">PDF</span><div style="flex:1;min-width:0"><div class="sfi-name">ML_Chapter5.pdf</div><div class="sfi-size">2.4 MB</div></div><span class="sfi-status sfi-ready">Ready</span></div>
+      <div class="sb-file"><span class="sfi-badge sfi-docx">DOC</span><div style="flex:1;min-width:0"><div class="sfi-name">DataStructures.docx</div><div class="sfi-size">1.1 MB</div></div><span class="sfi-status sfi-ready">Ready</span></div>
+      <div class="sb-file"><span class="sfi-badge sfi-txt">TXT</span><div style="flex:1;min-width:0"><div class="sfi-name">lecture_notes.txt</div><div class="sfi-size">48 KB</div></div><span class="sfi-status sfi-proc">Processing</span></div>
+      <a href="upload.html" class="sb-upload-link"><i class="fa-solid fa-plus"></i> Upload more files</a>
+    </div>
+    <div class="sb-footer">
+      <div class="granite-pill">
+        <span class="gp-icon">🧠</span>
+        <div><span class="gp-name">IBM Granite 3.3</span><span class="gp-sub">8B Instruct · RAG enabled</span></div>
+        <span class="gp-dot" aria-label="Online"></span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Chat main -->
+  <div class="chat-main">
+    <div class="chat-topbar">
+      <button class="ct-btn ct-menu" id="sidebarToggle" aria-label="Open sidebar"><i class="fa-solid fa-bars"></i></button>
+      <div class="ct-info">
+        <span class="ct-title" id="chatTitle">Machine Learning Notes</span>
+        <span class="ct-sub">3 files loaded · IBM Granite 3.3</span>
+      </div>
+      <div class="ct-actions">
+        <button class="ct-btn" id="clearChatBtn" title="Clear chat"><i class="fa-solid fa-trash"></i></button>
+        <button class="ct-btn" id="exportChatBtn" title="Export chat"><i class="fa-solid fa-download"></i></button>
+        <button class="ct-btn" id="themeToggle2" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      </div>
+    </div>
+
+    <div class="chat-msgs" id="chatMsgs" role="log" aria-live="polite">
+      <div class="chat-welcome" id="chatWelcome">
+        <div class="cw-icon">🧠</div>
+        <h2 class="cw-title">Ask IBM Granite AI</h2>
+        <p class="cw-sub">Your study materials are loaded. Ask anything — summaries, explanations, quizzes, or concept breakdowns.</p>
+        <div class="suggestions" id="suggestions">
+          <button class="sug-chip" data-prompt="Summarise the key concepts from my uploaded notes">📄 Summarise my notes</button>
+          <button class="sug-chip" data-prompt="Generate 5 quiz questions from my study material">📝 Generate a quiz</button>
+          <button class="sug-chip" data-prompt="What are the most important topics I should focus on?">🎯 Key topics to focus on</button>
+          <button class="sug-chip" data-prompt="Create a study plan for this week based on my uploaded material">📅 Build a study plan</button>
+          <button class="sug-chip" data-prompt="Explain the hardest concept in my notes in simple terms">💡 Explain hardest concept</button>
+          <button class="sug-chip" data-prompt="Create flashcards from the key definitions in my notes">🃏 Create flashcards</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-bar">
+      <div class="chat-input-wrap">
+        <label class="attach-btn" for="chatFile" title="Attach file"><i class="fa-solid fa-paperclip"></i></label>
+        <input type="file" id="chatFile" class="sr-only" accept=".pdf,.doc,.docx,.txt"/>
+        <textarea id="chatInput" class="chat-textarea" placeholder="Ask anything about your study materials…" rows="1" maxlength="2000" aria-label="Message input"></textarea>
+        <button class="send-btn" id="sendBtn" disabled aria-label="Send"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+      <div class="input-hint"><span>IBM Granite AI · Responses grounded in your uploaded documents</span><span id="charCount"></span></div>
+    </div>
+  </div>
+</div>
+<div class="sb-backdrop" id="sbBackdrop"></div>
+
+<script src="../js/app.js" defer></script>
+<script>
+(function(){
+  'use strict';
+  const RESP = {
+    summarise:`<p>Here's a structured summary of your uploaded notes:</p><p><strong>Key Concepts:</strong></p><ul><li><strong>Supervised Learning</strong> — Model trained on labelled data. Algorithms: Linear Regression, Decision Trees, SVM, Neural Networks.</li><li><strong>Gradient Descent</strong> — Minimises loss by updating weights in direction of steepest descent. θ = θ − α·∇L</li><li><strong>Overfitting vs Underfitting</strong> — Overfitting: model memorises training data. Underfitting: too simple to capture patterns.</li><li><strong>Regularisation</strong> — L1 (Lasso) and L2 (Ridge) penalties to prevent overfitting.</li></ul><p><strong>Important Formulae:</strong> MSE Loss: L = (1/n)Σ(yᵢ−ŷᵢ)²</p>`,
+    quiz:`<p>Here are <strong>5 quiz questions</strong> generated from your material:</p><ul><li><strong>Q1.</strong> What is the primary difference between supervised and unsupervised learning? → <em>Supervised uses labelled data; unsupervised does not ✓</em></li><li><strong>Q2.</strong> Which algorithm is used to train neural networks? → <em>Gradient Descent ✓</em></li><li><strong>Q3.</strong> What does overfitting indicate? → <em>Performs well on training data but poorly on new data ✓</em></li><li><strong>Q4.</strong> What is the role of the learning rate (α)? → <em>Controls step size during weight updates ✓</em></li><li><strong>Q5.</strong> What is K-Means clustering? → <em>Unsupervised algorithm grouping data into K clusters ✓</em></li></ul>`,
+    topics:`<p>Based on your uploaded notes, here are the <strong>most important topics</strong> to focus on:</p><p><strong>🔴 High Priority (exam-likely):</strong></p><ul><li>Gradient Descent &amp; Backpropagation</li><li>Bias-Variance Tradeoff (Overfitting/Underfitting)</li><li>Supervised vs Unsupervised classification</li></ul><p><strong>🟡 Medium Priority:</strong></p><ul><li>Decision Trees &amp; Random Forests</li><li>K-Means Clustering algorithm</li></ul><p><strong>🟢 Review:</strong></p><ul><li>Basic probability &amp; linear algebra</li></ul>`,
+    plan:`<p>Here's a <strong>personalised study plan</strong> based on your uploaded material:</p><p><strong>Week 1 — Foundations:</strong></p><ul><li>Day 1–2: Supervised Learning concepts + practice</li><li>Day 3–4: Unsupervised Learning &amp; Clustering</li><li>Day 5: Review quiz + flashcards</li></ul><p><strong>Week 2 — Core Algorithms:</strong></p><ul><li>Day 1–2: Neural Networks &amp; Backpropagation</li><li>Day 3: Gradient Descent variants</li><li>Day 4–5: Model Evaluation &amp; Cross-validation</li></ul><p><em>Estimated study time: 45–60 min/day</em></p>`,
+    explain:`<p>Let me explain <strong>Gradient Descent</strong> in simple terms:</p><p>Imagine you're blindfolded on a hilly landscape and want to reach the lowest valley. You can't see — but you can feel the slope under your feet.</p><ul><li><strong>Feel the slope</strong> — calculate how steep it is (the gradient)</li><li><strong>Step downhill</strong> — move a small amount in the downhill direction (learning rate controls step size)</li><li><strong>Repeat</strong> until you reach the minimum</li></ul><p>Neural networks use this to minimise prediction errors. Too large a step: overshoot. Too small: very slow convergence.</p>`,
+    flashcards:`<p>Here are <strong>6 flashcards</strong> from your notes:</p><ul><li><strong>Q:</strong> What is supervised learning? <br><strong>A:</strong> ML where model is trained on labelled input-output pairs to predict outputs.</li><li><strong>Q:</strong> Define gradient descent <br><strong>A:</strong> Iterative algorithm minimising loss by updating params in direction of negative gradient.</li><li><strong>Q:</strong> What is overfitting? <br><strong>A:</strong> Model learns training noise, performs poorly on new data.</li><li><strong>Q:</strong> What is regularisation? <br><strong>A:</strong> Penalty for model complexity to prevent overfitting (L1/L2).</li><li><strong>Q:</strong> What is PCA? <br><strong>A:</strong> Dimensionality reduction by projecting data onto axes of maximum variance.</li><li><strong>Q:</strong> What is cross-validation? <br><strong>A:</strong> Training/testing on different subsets to evaluate model performance.</li></ul>`,
+    default:`<p>I've analysed your uploaded study material. Based on the content in your documents, IBM Granite AI has indexed all uploaded files and can provide detailed explanations, quizzes, summaries, and study plans for any topic covered.</p><p><strong>Would you like me to:</strong></p><ul><li>📄 Generate a full summary of this topic?</li><li>📝 Create a quiz to test your knowledge?</li><li>📅 Build a focused study plan?</li><li>💡 Explain any specific concept in detail?</li></ul>`
+  };
+
+  function getResp(msg){
+    const m=msg.toLowerCase();
+    if(m.includes('summar')) return RESP.summarise;
+    if(m.includes('quiz')||m.includes('question')) return RESP.quiz;
+    if(m.includes('topic')||m.includes('focus')) return RESP.topics;
+    if(m.includes('plan')||m.includes('schedule')) return RESP.plan;
+    if(m.includes('explain')||m.includes('simple')||m.includes('hardest')) return RESP.explain;
+    if(m.includes('flashcard')) return RESP.flashcards;
+    return RESP.default;
+  }
+
+  const msgs=document.getElementById('chatMsgs');
+  const welcome=document.getElementById('chatWelcome');
+  const input=document.getElementById('chatInput');
+  const sendBtn=document.getElementById('sendBtn');
+  const cc=document.getElementById('charCount');
+  let isTyping=false, history=[];
+
+  function now(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+  function scrollBottom(){requestAnimationFrame(()=>{msgs.scrollTop=msgs.scrollHeight})}
+  function hideWelcome(){if(welcome&&!welcome.hidden){welcome.style.opacity='0';welcome.style.transition='opacity .3s';setTimeout(()=>welcome.hidden=true,300)}}
+
+  input.addEventListener('input',()=>{
+    input.style.height='auto';
+    input.style.height=Math.min(input.scrollHeight,160)+'px';
+    const l=input.value.length;
+    sendBtn.disabled=l===0;
+    cc.textContent=l>0?l+'/2000':'';
+  });
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(!sendBtn.disabled)send()}});
+  sendBtn.addEventListener('click',send);
+
+  function send(){
+    const txt=input.value.trim();
+    if(!txt||isTyping) return;
+    hideWelcome();
+    appendMsg('user',txt);
+    history.push({role:'user',txt,time:now()});
+    input.value='';input.style.height='auto';sendBtn.disabled=true;cc.textContent='';
+    showTyping();
+    setTimeout(()=>{
+      removeTyping();
+      const r=getResp(txt);
+      appendMsg('ai',r,['ML_Chapter5.pdf','DataStructures.docx']);
+      history.push({role:'ai',txt:r,time:now()});
+    },1200+Math.random()*1200);
+  }
+
+  function appendMsg(role,html,sources=[]){
+    const div=document.createElement('div');
+    div.className='msg msg-'+role;
+    const av=role==='user'?'<div class="msg-avatar">U</div>':'<div class="msg-avatar">🧠</div>';
+    const srcs=role==='ai'&&sources.length?`<div class="msg-sources">${sources.map(s=>`<span class="src-chip"><i class="fa-solid fa-paperclip"></i> ${s}</span>`).join('')}</div>`:'';
+    const acts=role==='ai'?`<div class="msg-actions"><button class="ma-btn" data-a="copy" title="Copy">📋</button><button class="ma-btn" data-a="like" title="Good">👍</button><button class="ma-btn" data-a="bad" title="Bad">👎</button></div>`:'';
+    div.innerHTML=av+`<div class="msg-content"><div class="msg-bubble">${html}</div>${srcs}${acts}<span class="msg-time">${now()}</span></div>`;
+    div.querySelectorAll('.ma-btn').forEach(b=>b.addEventListener('click',()=>{
+      if(b.dataset.a==='copy'){navigator.clipboard?.writeText(div.querySelector('.msg-bubble').innerText).then(()=>{b.textContent='✓';setTimeout(()=>b.textContent='📋',2000)})}
+      if(b.dataset.a==='like') b.textContent='✅';
+      if(b.dataset.a==='bad') b.textContent='❌';
+    }));
+    msgs.appendChild(div);scrollBottom();
+  }
+
+  function showTyping(){isTyping=true;const d=document.createElement('div');d.id='typing';d.className='typing';
+    d.innerHTML='<div class="typing-av">🧠</div><div class="typing-bub"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+    msgs.appendChild(d);scrollBottom()}
+  function removeTyping(){isTyping=false;document.getElementById('typing')?.remove()}
+
+  document.querySelectorAll('.sug-chip').forEach(c=>c.addEventListener('click',()=>{input.value=c.dataset.prompt;input.style.height=input.scrollHeight+'px';sendBtn.disabled=false;send()}));
+
+  document.getElementById('newChatBtn').addEventListener('click',()=>{
+    if(history.length&&!confirm('Start a new chat? Current conversation will be lost.')) return;
+    history=[];
+    Array.from(msgs.children).forEach(el=>{if(el!==welcome) el.remove()});
+    welcome.hidden=false;welcome.style.opacity='1';
+    document.getElementById('chatTitle').textContent='New Chat';
+  });
+
+  document.getElementById('clearChatBtn').addEventListener('click',()=>{
+    if(!history.length) return;
+    if(confirm('Clear this conversation?')){
+      history=[];
+      Array.from(msgs.children).forEach(el=>{if(el!==welcome) el.remove()});
+      welcome.hidden=false;welcome.style.opacity='1';
+    }
+  });
+
+  document.getElementById('exportChatBtn').addEventListener('click',()=>{
+    if(!history.length) return;
+    const txt=history.map(m=>`[${m.time}] ${m.role==='user'?'You':'Granite AI'}:\n${m.txt.replace(/<[^>]+>/g,'')}`).join('\n\n---\n\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));
+    a.download='chat-export.txt';a.click();
+  });
+
+  // Sidebar mobile
+  const sb=document.getElementById('chatSidebar');
+  const backdrop=document.getElementById('sbBackdrop');
+  document.getElementById('sidebarToggle').addEventListener('click',()=>{sb.classList.add('open');backdrop.classList.add('show')});
+  document.getElementById('sidebarClose').addEventListener('click',()=>{sb.classList.remove('open');backdrop.classList.remove('show')});
+  backdrop.addEventListener('click',()=>{sb.classList.remove('open');backdrop.classList.remove('show')});
+
+  // Recent chat switching
+  document.querySelectorAll('.chat-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      document.querySelectorAll('.chat-item').forEach(i=>i.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById('chatTitle').textContent=item.querySelector('.ci-name').textContent;
+      if(window.innerWidth<900){sb.classList.remove('open');backdrop.classList.remove('show')}
+    });
+  });
+
+  // Theme toggle in topbar
+  document.getElementById('themeToggle2').addEventListener('click',()=>{
+    const cur=document.documentElement.dataset.theme;
+    const next=cur==='dark'?'light':'dark';
+    document.documentElement.dataset.theme=next;
+    localStorage.setItem('ssg-theme',next);
+    document.getElementById('themeToggle2').innerHTML=next==='dark'?'<i class="fa-solid fa-sun"></i>':'<i class="fa-solid fa-moon"></i>';
+  });
+})();
+</script>
+</body>
+</html>

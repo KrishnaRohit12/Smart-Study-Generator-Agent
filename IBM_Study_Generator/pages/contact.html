@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Contact the Smart Study Generator team — IBM University Engagement project." />
+  <meta name="theme-color" content="#0f62fe" />
+  <title>Contact | Smart Study Generator</title>
+
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+  /* ── Contact Page Styles ──────────────────────────────────── */
+
+  .contact-main {
+    background: var(--color-surface);
+    padding: var(--sp-16) 0 var(--sp-20);
+    min-height: 60vh;
+  }
+
+  /* ── Two-col contact layout ── */
+  .contact-layout {
+    display: grid;
+    grid-template-columns: 60fr 40fr;
+    gap: var(--sp-8);
+    align-items: start;
+  }
+
+  /* ── Form card ── */
+  .contact-form-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-8) var(--sp-8);
+    transition: box-shadow var(--ease);
+  }
+  .contact-form-card:focus-within {
+    box-shadow: var(--shadow-lg);
+  }
+  .contact-form-card__title {
+    font-size: 1.375rem; font-weight: 700;
+    color: var(--color-text); letter-spacing: -.4px;
+    margin-bottom: var(--sp-2);
+    display: flex; align-items: center; gap: var(--sp-3);
+  }
+  .contact-form-card__title i { color: var(--blue-50); font-size: 1.1rem; }
+  .contact-form-card__sub {
+    font-size: .875rem; color: var(--color-text-muted);
+    margin-bottom: var(--sp-7); line-height: 1.65;
+  }
+  .contact-form-fields { display: flex; flex-direction: column; gap: var(--sp-5); }
+  .contact-form-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5);
+  }
+  .char-counter-row {
+    display: flex; justify-content: flex-end;
+    margin-top: var(--sp-1);
+  }
+  .char-counter {
+    font-size: .72rem; color: var(--color-text-muted);
+    font-weight: 500; font-family: var(--font-mono);
+    transition: color var(--ease);
+  }
+  .char-counter.warn { color: #ff832b; }
+  .char-counter.over { color: var(--red-50); }
+
+  /* ── Submit / loading / success states ── */
+  .contact-submit-wrap { margin-top: var(--sp-6); }
+  .contact-submit-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 1rem;
+    padding: 1rem 2rem;
+  }
+  .contact-loading { display: none; }
+  .contact-loading.show { display: flex; }
+  .contact-success {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: var(--sp-10) var(--sp-6);
+    gap: var(--sp-4);
+    animation: success-in .5s var(--ease-bounce);
+  }
+  .contact-success.show { display: flex; }
+  @keyframes success-in {
+    from { opacity: 0; transform: scale(.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .success-icon-wrap {
+    width: 76px; height: 76px;
+    background: var(--green-10);
+    border: 2px solid #a7f0ba;
+    border-radius: var(--radius-full);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; color: var(--green-50);
+    animation: success-pulse 1s var(--ease-bounce);
+  }
+  @keyframes success-pulse {
+    0%   { transform: scale(0); }
+    70%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+  .success-title { font-size: 1.25rem; font-weight: 700; color: var(--color-text); }
+  .success-sub { font-size: .9rem; color: var(--color-text-muted); max-width: 320px; line-height: 1.7; }
+  .success-reset {
+    font-size: .825rem; color: var(--blue-50); font-weight: 600;
+    cursor: pointer; background: none; border: none;
+    text-decoration: underline; text-underline-offset: 3px;
+    font-family: inherit;
+  }
+  .success-reset:hover { color: var(--blue-60); }
+
+  /* ── Right: Contact info ── */
+  .contact-info { display: flex; flex-direction: column; gap: var(--sp-5); }
+  .contact-info__title {
+    font-size: 1.25rem; font-weight: 700;
+    color: var(--color-text); letter-spacing: -.3px;
+    margin-bottom: var(--sp-1);
+  }
+  .contact-info__sub {
+    font-size: .875rem; color: var(--color-text-muted);
+    line-height: 1.65; margin-bottom: var(--sp-4);
+  }
+  .contact-info-card {
+    display: flex; align-items: flex-start; gap: var(--sp-4);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-5);
+    transition: transform var(--ease-out), box-shadow var(--ease-out), border-color var(--ease);
+  }
+  .contact-info-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--blue-20); }
+  .contact-info-card__icon {
+    width: 42px; height: 42px;
+    background: var(--blue-10); color: var(--blue-50);
+    border-radius: var(--radius-lg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+    transition: background var(--ease), color var(--ease);
+  }
+  .contact-info-card:hover .contact-info-card__icon { background: var(--blue-50); color: var(--white); }
+  .contact-info-card__label { font-size: .72rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 3px; }
+  .contact-info-card__value { font-size: .9rem; font-weight: 600; color: var(--color-text); }
+  .contact-info-card__value a { color: var(--blue-50); transition: color var(--ease); }
+  .contact-info-card__value a:hover { color: var(--blue-60); }
+  .contact-info-card__desc { font-size: .78rem; color: var(--color-text-muted); margin-top: 2px; }
+
+  .contact-social-title {
+    font-size: .72rem; font-weight: 700;
+    color: var(--color-text-muted); text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: var(--sp-3); margin-top: var(--sp-2);
+  }
+  .contact-social-btns { display: flex; gap: var(--sp-3); }
+  .social-btn {
+    width: 44px; height: 44px;
+    background: var(--color-bg); border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-full);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; color: var(--color-text-muted);
+    transition: background var(--ease), color var(--ease), border-color var(--ease), transform var(--ease-bounce), box-shadow var(--ease);
+    text-decoration: none;
+  }
+  .social-btn:hover {
+    background: var(--blue-50); color: var(--white);
+    border-color: var(--blue-50);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-blue-sm);
+  }
+
+  /* ── Map ── */
+  .contact-map-section {
+    background: var(--color-bg);
+    padding: var(--sp-16) 0;
+  }
+  .contact-map-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .contact-map-header {
+    padding: var(--sp-5) var(--sp-8);
+    border-bottom: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: var(--sp-3);
+  }
+  .contact-map-title {
+    font-size: 1rem; font-weight: 700; color: var(--color-text);
+    display: flex; align-items: center; gap: var(--sp-3);
+  }
+  .contact-map-title i { color: var(--blue-50); }
+  .contact-map-badge {
+    display: inline-flex; align-items: center; gap: var(--sp-2);
+    background: var(--blue-10); border: 1px solid var(--blue-20);
+    color: var(--blue-60); border-radius: var(--radius-full);
+    padding: 4px 12px; font-size: .72rem; font-weight: 700;
+  }
+  .contact-map-svg-wrap {
+    background: #f0f5ff;
+    padding: var(--sp-8);
+    position: relative;
+  }
+  [data-theme="dark"] .contact-map-svg-wrap { background: #111827; }
+
+  /* ── Pulse dot for map ── */
+  .map-pulse {
+    animation: map-pulse-anim 2.5s ease-in-out infinite;
+  }
+  .map-pulse:nth-child(2) { animation-delay: .4s; }
+  .map-pulse:nth-child(3) { animation-delay: .8s; }
+  .map-pulse:nth-child(4) { animation-delay: 1.2s; }
+  .map-pulse:nth-child(5) { animation-delay: 1.6s; }
+  @keyframes map-pulse-anim {
+    0%,100% { opacity: 1; r: 5; }
+    50% { opacity: .5; r: 7; }
+  }
+
+  /* ── FAQ ── */
+  .contact-faq {
+    background: var(--color-surface);
+    padding: var(--sp-16) 0 var(--sp-20);
+  }
+  .contact-faq__header { margin-bottom: var(--sp-10); }
+  .faq-list { display: flex; flex-direction: column; gap: var(--sp-3); max-width: 780px; margin: 0 auto; }
+  .faq-item {
+    background: var(--color-bg);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xs);
+    overflow: hidden;
+    transition: border-color var(--ease), box-shadow var(--ease);
+  }
+  .faq-item.open { border-color: var(--blue-40); box-shadow: var(--shadow-blue-sm); }
+  .faq-question {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--sp-5) var(--sp-6);
+    cursor: pointer; gap: var(--sp-4);
+    -webkit-user-select: none; user-select: none;
+    transition: background var(--ease);
+  }
+  .faq-question:hover { background: var(--color-surface); }
+  .faq-item.open .faq-question { background: var(--blue-10); }
+  [data-theme="dark"] .faq-item.open .faq-question { background: rgba(15,98,254,.1); }
+  .faq-q-text {
+    font-size: .9375rem; font-weight: 600;
+    color: var(--color-text); line-height: 1.4;
+  }
+  .faq-item.open .faq-q-text { color: var(--blue-60); }
+  [data-theme="dark"] .faq-item.open .faq-q-text { color: var(--blue-30); }
+  .faq-chevron {
+    width: 28px; height: 28px; flex-shrink: 0;
+    background: var(--color-surface); border-radius: var(--radius-full);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-text-muted); font-size: .8rem;
+    transition: transform var(--ease), background var(--ease), color var(--ease);
+  }
+  .faq-item.open .faq-chevron {
+    transform: rotate(180deg);
+    background: var(--blue-50); color: var(--white);
+  }
+  .faq-answer {
+    max-height: 0; overflow: hidden;
+    transition: max-height .4s cubic-bezier(.4,0,.2,1), padding .3s ease;
+    padding: 0 var(--sp-6);
+  }
+  .faq-answer-inner {
+    font-size: .9rem; color: var(--color-text-muted);
+    line-height: 1.8;
+    padding-bottom: var(--sp-5); padding-top: var(--sp-1);
+  }
+  .faq-item.open .faq-answer { max-height: 300px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .contact-layout { grid-template-columns: 1fr; }
+    .contact-form-row { grid-template-columns: 1fr; }
+    .contact-info { flex-direction: row; flex-wrap: wrap; }
+    .contact-info-card { flex: 1; min-width: 220px; }
+  }
+  @media (max-width: 600px) {
+    .contact-form-card { padding: var(--sp-6) var(--sp-5); }
+    .contact-info { flex-direction: column; }
+    .contact-map-svg-wrap { padding: var(--sp-4); }
+    .contact-map-header { padding: var(--sp-4) var(--sp-5); }
+  }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────── -->
+<header id="nav" class="nav" role="banner">
+  <div class="container nav__inner">
+    <a href="../index.html" class="nav__logo" aria-label="Smart Study Generator home">
+      <span class="nav__logo-badge">IBM</span>
+      <span class="nav__logo-text">Smart Study Generator</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary navigation">
+      <a href="../index.html" class="nav__link">Home</a>
+      <a href="upload.html" class="nav__link">Upload Notes</a>
+      <a href="chat.html" class="nav__link">AI Chat</a>
+      <a href="quiz.html" class="nav__link">Quiz</a>
+      <a href="flashcards.html" class="nav__link">Flashcards</a>
+      <a href="planner.html" class="nav__link">Study Planner</a>
+      <a href="dashboard.html" class="nav__link">Dashboard</a>
+      <a href="about.html" class="nav__link">About</a>
+      <a href="contact.html" class="nav__link active">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <button class="nav__theme-btn" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <a href="dashboard.html" class="btn btn-primary btn-sm">Dashboard</a>
+    </div>
+    <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span>
+    </button>
+  </div>
+  <nav class="nav__mobile" id="navMobile">
+    <a href="../index.html" class="nav__link">Home</a>
+    <a href="upload.html" class="nav__link">Upload Notes</a>
+    <a href="chat.html" class="nav__link">AI Chat</a>
+    <a href="quiz.html" class="nav__link">Quiz</a>
+    <a href="flashcards.html" class="nav__link">Flashcards</a>
+    <a href="planner.html" class="nav__link">Study Planner</a>
+    <a href="dashboard.html" class="nav__link">Dashboard</a>
+    <a href="about.html" class="nav__link">About</a>
+    <a href="contact.html" class="nav__link active">Contact</a>
+    <a href="dashboard.html" class="btn btn-primary" style="margin-top:.5rem;justify-content:center;">Dashboard</a>
+  </nav>
+</header>
+
+<!-- ── A) PAGE HERO ───────────────────────────────────────────── -->
+<section class="page-hero" aria-label="Contact page hero">
+  <div class="page-hero__bg" aria-hidden="true"></div>
+  <div class="container page-hero__inner">
+    <div class="page-hero-badge" data-reveal>
+      <span class="page-hero-badge__dot"></span>
+      Get in Touch
+    </div>
+    <h1 class="page-hero__title" data-reveal data-reveal-delay="1">
+      Contact <span class="page-hero__accent">Us</span>
+    </h1>
+    <p class="page-hero__sub" data-reveal data-reveal-delay="2">
+      Have questions about the IBM University Engagement project? We'd love to hear from you — reach out and we'll respond within 24 hours.
+    </p>
+  </div>
+</section>
+
+<!-- ── B+C) CONTACT LAYOUT ──────────────────────────────────── -->
+<section class="contact-main" aria-labelledby="contact-form-title">
+  <div class="container">
+    <div class="contact-layout">
+
+      <!-- LEFT: Form card -->
+      <div class="contact-form-card" data-reveal>
+        <!-- Normal form state -->
+        <div id="formState">
+          <h2 class="contact-form-card__title" id="contact-form-title">
+            <i class="fa-solid fa-paper-plane"></i>
+            Send us a Message
+          </h2>
+          <p class="contact-form-card__sub">Fill in the form below and a member of the IBM University Engagement team will respond to your message shortly.</p>
+
+          <form id="contactForm" novalidate>
+            <div class="contact-form-fields">
+              <div class="contact-form-row">
+                <div class="form-group">
+                  <label class="form-label" for="contactName">
+                    <i class="fa-regular fa-user" style="color:var(--blue-40);font-size:.8rem"></i>
+                    Full Name <span style="color:var(--red-50);margin-left:2px">*</span>
+                  </label>
+                  <input
+                    class="form-input"
+                    type="text"
+                    id="contactName"
+                    name="contactName"
+                    placeholder="Your name"
+                    autocomplete="name"
+                    required
+                  />
+                  <span class="form-error" id="nameError">Please enter your name (at least 2 characters).</span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="contactEmail">
+                    <i class="fa-regular fa-envelope" style="color:var(--blue-40);font-size:.8rem"></i>
+                    Email Address <span style="color:var(--red-50);margin-left:2px">*</span>
+                  </label>
+                  <input
+                    class="form-input"
+                    type="email"
+                    id="contactEmail"
+                    name="contactEmail"
+                    placeholder="your@email.com"
+                    autocomplete="email"
+                    required
+                  />
+                  <span class="form-error" id="emailError">Please enter a valid email address.</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="contactSubject">
+                  <i class="fa-solid fa-tag" style="color:var(--blue-40);font-size:.8rem"></i>
+                  Subject <span style="color:var(--red-50);margin-left:2px">*</span>
+                </label>
+                <select class="form-select" id="contactSubject" name="contactSubject" required>
+                  <option value="">Select a subject…</option>
+                  <option value="general">General Inquiry</option>
+                  <option value="support">Technical Support</option>
+                  <option value="granite">IBM Granite AI Questions</option>
+                  <option value="feature">Feature Request</option>
+                  <option value="bug">Bug Report</option>
+                  <option value="university">IBM University Engagement</option>
+                </select>
+                <span class="form-error" id="subjectError">Please select a subject.</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="contactMessage">
+                  <i class="fa-regular fa-comment-dots" style="color:var(--blue-40);font-size:.8rem"></i>
+                  Message <span style="color:var(--red-50);margin-left:2px">*</span>
+                </label>
+                <textarea
+                  class="form-input"
+                  id="contactMessage"
+                  name="contactMessage"
+                  rows="5"
+                  placeholder="Describe your question or feedback in detail…"
+                  maxlength="500"
+                  required
+                  style="resize:vertical;min-height:120px"
+                ></textarea>
+                <div class="char-counter-row">
+                  <span class="char-counter" id="charCounter">0 / 500</span>
+                </div>
+                <span class="form-error" id="messageError">Please enter a message (at least 20 characters).</span>
+              </div>
+            </div>
+
+            <div class="contact-submit-wrap">
+              <button type="submit" id="contactSubmit" class="btn btn-primary btn-lg contact-submit-btn">
+                <span id="submitLabel">Send Message <i class="fa-solid fa-paper-plane"></i></span>
+                <span class="contact-loading" id="submitLoading">
+                  <span class="spinner"></span> Sending…
+                </span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- SUCCESS state (hidden by default) -->
+        <div class="contact-success" id="successState">
+          <div class="success-icon-wrap">
+            <i class="fa-solid fa-check"></i>
+          </div>
+          <div class="success-title">Message Sent!</div>
+          <div class="success-sub">We've received your message and will get back to you within 24 hours. Keep an eye on your inbox.</div>
+          <button class="success-reset" id="resetForm" aria-label="Send another message">Send another message →</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Contact info -->
+      <div data-reveal data-reveal-delay="2">
+        <div class="contact-info">
+          <div>
+            <h2 class="contact-info__title">Get in Touch</h2>
+            <p class="contact-info__sub">Reach out through any of these channels. Our team monitors all communication channels during academic working hours.</p>
+          </div>
+
+          <div class="contact-info-card">
+            <div class="contact-info-card__icon"><i class="fa-regular fa-envelope"></i></div>
+            <div>
+              <div class="contact-info-card__label">Email</div>
+              <div class="contact-info-card__value">
+                <a href="mailto:ibm.studygenerator@ibm.com">ibm.studygenerator@ibm.com</a>
+              </div>
+              <div class="contact-info-card__desc">For general enquiries and project questions</div>
+            </div>
+          </div>
+
+          <div class="contact-info-card">
+            <div class="contact-info-card__icon"><i class="fa-solid fa-building-columns"></i></div>
+            <div>
+              <div class="contact-info-card__label">Organisation</div>
+              <div class="contact-info-card__value">IBM University Engagement Team</div>
+              <div class="contact-info-card__desc">IBM Academic Initiative — Global Programme</div>
+            </div>
+          </div>
+
+          <div class="contact-info-card">
+            <div class="contact-info-card__icon"><i class="fa-regular fa-clock"></i></div>
+            <div>
+              <div class="contact-info-card__label">Response Time</div>
+              <div class="contact-info-card__value">Within 24 hours</div>
+              <div class="contact-info-card__desc">Monday–Friday, 09:00–18:00 (GMT)</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="contact-social-title">Follow the Project</div>
+            <div class="contact-social-btns">
+              <a href="https://github.com" target="_blank" rel="noopener" class="social-btn" aria-label="GitHub">
+                <i class="fa-brands fa-github"></i>
+              </a>
+              <a href="https://linkedin.com" target="_blank" rel="noopener" class="social-btn" aria-label="LinkedIn">
+                <i class="fa-brands fa-linkedin-in"></i>
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noopener" class="social-btn" aria-label="Twitter / X">
+                <i class="fa-brands fa-x-twitter"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── D) MAP ─────────────────────────────────────────────────── -->
+<section class="contact-map-section" aria-labelledby="map-title">
+  <div class="container">
+    <div class="contact-map-card" data-reveal>
+      <div class="contact-map-header">
+        <div class="contact-map-title">
+          <i class="fa-solid fa-earth-americas"></i>
+          <span id="map-title">IBM University Engagement — Global Campus Network</span>
+        </div>
+        <span class="contact-map-badge"><i class="fa-solid fa-location-dot"></i> 5 Active Regions</span>
+      </div>
+      <div class="contact-map-svg-wrap">
+        <svg id="mapSvg" viewBox="0 0 800 420" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg"
+             role="img" aria-label="World map showing IBM University Engagement campus network locations">
+
+          <!-- ── Simplified World Map Landmasses ── -->
+          <!-- North America -->
+          <path d="M 60 80 C 70 70 110 65 140 70 C 165 72 185 80 200 90 C 215 100 225 120 220 145 C 215 165 200 185 190 200 C 178 220 160 240 145 255 C 132 268 120 272 108 265 C 95 258 80 242 72 225 C 62 205 55 180 52 158 C 48 135 50 90 60 80Z" fill="rgba(15,98,254,.12)" stroke="rgba(15,98,254,.3)" stroke-width="1.5"/>
+          <!-- Greenland -->
+          <path d="M 195 42 C 205 36 225 34 235 40 C 245 46 248 56 240 64 C 232 72 215 76 204 70 C 194 64 188 50 195 42Z" fill="rgba(15,98,254,.08)" stroke="rgba(15,98,254,.2)" stroke-width="1"/>
+          <!-- Central America -->
+          <path d="M 130 265 C 140 260 155 262 162 270 C 168 278 165 290 155 295 C 145 300 132 296 128 285 C 124 275 124 268 130 265Z" fill="rgba(15,98,254,.1)" stroke="rgba(15,98,254,.25)" stroke-width="1"/>
+          <!-- South America -->
+          <path d="M 145 300 C 155 295 175 292 195 298 C 212 304 225 318 228 340 C 230 360 222 385 208 400 C 194 414 170 418 152 410 C 135 402 122 382 118 360 C 114 340 118 315 128 302 C 133 298 140 300 145 300Z" fill="rgba(15,98,254,.1)" stroke="rgba(15,98,254,.25)" stroke-width="1.2"/>
+          <!-- Europe -->
+          <path d="M 360 55 C 375 48 405 44 430 50 C 450 55 465 66 470 80 C 475 94 468 110 455 120 C 442 130 420 136 400 133 C 382 130 365 120 358 106 C 350 90 348 64 360 55Z" fill="rgba(15,98,254,.12)" stroke="rgba(15,98,254,.3)" stroke-width="1.5"/>
+          <!-- Scandinavia bump -->
+          <path d="M 395 34 C 404 28 420 26 426 34 C 432 42 428 52 418 56 C 408 60 396 56 393 46 C 391 40 392 36 395 34Z" fill="rgba(15,98,254,.08)" stroke="rgba(15,98,254,.2)" stroke-width="1"/>
+          <!-- Africa -->
+          <path d="M 390 145 C 406 138 435 136 455 145 C 475 154 488 175 490 200 C 492 225 485 260 475 285 C 464 310 445 332 422 340 C 400 348 375 342 358 325 C 342 308 334 280 334 255 C 334 230 340 200 352 180 C 364 160 376 150 390 145Z" fill="rgba(15,98,254,.1)" stroke="rgba(15,98,254,.25)" stroke-width="1.2"/>
+          <!-- Middle East / Arabia -->
+          <path d="M 475 140 C 488 134 510 132 525 140 C 538 148 542 162 536 178 C 530 192 514 200 498 198 C 482 196 470 184 468 170 C 466 156 465 146 475 140Z" fill="rgba(15,98,254,.08)" stroke="rgba(15,98,254,.2)" stroke-width="1"/>
+          <!-- Russia / Central Asia  -->
+          <path d="M 470 38 C 510 28 580 22 640 30 C 690 37 730 52 740 70 C 748 86 730 104 705 114 C 675 126 635 130 600 128 C 565 126 530 118 504 106 C 480 95 462 72 470 38Z" fill="rgba(15,98,254,.09)" stroke="rgba(15,98,254,.22)" stroke-width="1.2"/>
+          <!-- India sub -->
+          <path d="M 555 160 C 568 154 590 152 600 162 C 610 172 610 190 600 205 C 590 218 572 224 558 216 C 544 208 538 190 540 175 C 542 168 548 164 555 160Z" fill="rgba(15,98,254,.1)" stroke="rgba(15,98,254,.28)" stroke-width="1.2"/>
+          <!-- SE Asia + China -->
+          <path d="M 610 80 C 640 68 695 64 735 76 C 762 85 778 104 772 126 C 765 148 742 162 715 165 C 688 168 658 158 638 142 C 618 126 600 98 610 80Z" fill="rgba(15,98,254,.09)" stroke="rgba(15,98,254,.22)" stroke-width="1"/>
+          <!-- Japan -->
+          <path d="M 734 80 C 742 76 752 78 755 86 C 758 94 752 104 744 106 C 736 108 728 102 726 94 C 724 86 728 82 734 80Z" fill="rgba(15,98,254,.12)" stroke="rgba(15,98,254,.3)" stroke-width="1"/>
+          <!-- Indonesia / SE asia islands -->
+          <path d="M 660 190 C 674 184 700 182 715 192 C 726 200 724 214 712 220 C 700 226 678 222 666 212 C 656 204 650 196 660 190Z" fill="rgba(15,98,254,.08)" stroke="rgba(15,98,254,.2)" stroke-width="1"/>
+          <!-- Australia -->
+          <path d="M 660 290 C 684 278 730 275 758 288 C 780 300 788 325 778 350 C 767 374 740 392 710 396 C 680 400 648 386 632 362 C 618 340 618 308 634 294 C 642 287 652 293 660 290Z" fill="rgba(15,98,254,.1)" stroke="rgba(15,98,254,.25)" stroke-width="1.2"/>
+
+          <!-- ── Grid lines (longitude/latitude) ── -->
+          <line x1="0" y1="140" x2="800" y2="140" stroke="rgba(15,98,254,.07)" stroke-width="1" stroke-dasharray="4 6"/>
+          <line x1="0" y1="220" x2="800" y2="220" stroke="rgba(15,98,254,.07)" stroke-width="1" stroke-dasharray="4 6"/>
+          <line x1="0" y1="300" x2="800" y2="300" stroke="rgba(15,98,254,.05)" stroke-width="1" stroke-dasharray="4 6"/>
+          <line x1="200" y1="0" x2="200" y2="420" stroke="rgba(15,98,254,.06)" stroke-width="1" stroke-dasharray="4 6"/>
+          <line x1="400" y1="0" x2="400" y2="420" stroke="rgba(15,98,254,.06)" stroke-width="1" stroke-dasharray="4 6"/>
+          <line x1="600" y1="0" x2="600" y2="420" stroke="rgba(15,98,254,.06)" stroke-width="1" stroke-dasharray="4 6"/>
+
+          <!-- ── Location group: North America (New York area) ── -->
+          <g class="location-group" id="loc-na">
+            <circle cx="148" cy="128" r="14" fill="rgba(15,98,254,.1)" stroke="rgba(15,98,254,.3)" stroke-width="1"/>
+            <circle cx="148" cy="128" r="5" fill="#0f62fe" class="map-pulse"/>
+            <text x="148" y="112" text-anchor="middle" font-size="10" font-weight="700" fill="#0f62fe" font-family="IBM Plex Sans, sans-serif">North America</text>
+          </g>
+
+          <!-- ── Location group: Europe (London/Frankfurt area) ── -->
+          <g class="location-group" id="loc-eu">
+            <circle cx="415" cy="88" r="14" fill="rgba(105,41,196,.1)" stroke="rgba(105,41,196,.3)" stroke-width="1"/>
+            <circle cx="415" cy="88" r="5" fill="#6929c4" class="map-pulse"/>
+            <text x="415" y="72" text-anchor="middle" font-size="10" font-weight="700" fill="#6929c4" font-family="IBM Plex Sans, sans-serif">Europe</text>
+          </g>
+
+          <!-- ── Location group: Asia Pacific (Singapore/Tokyo area) ── -->
+          <g class="location-group" id="loc-ap">
+            <circle cx="695" cy="145" r="14" fill="rgba(0,157,154,.1)" stroke="rgba(0,157,154,.3)" stroke-width="1"/>
+            <circle cx="695" cy="145" r="5" fill="#009d9a" class="map-pulse"/>
+            <text x="695" y="129" text-anchor="middle" font-size="10" font-weight="700" fill="#009d9a" font-family="IBM Plex Sans, sans-serif">Asia Pacific</text>
+          </g>
+
+          <!-- ── Location group: India (Bangalore area) ── -->
+          <g class="location-group" id="loc-in">
+            <circle cx="572" cy="192" r="14" fill="rgba(17,146,232,.1)" stroke="rgba(17,146,232,.3)" stroke-width="1"/>
+            <circle cx="572" cy="192" r="5" fill="#1192e8" class="map-pulse"/>
+            <text x="572" y="215" text-anchor="middle" font-size="10" font-weight="700" fill="#1192e8" font-family="IBM Plex Sans, sans-serif">India</text>
+          </g>
+
+          <!-- ── Location group: Latin America (São Paulo area) ── -->
+          <g class="location-group" id="loc-la">
+            <circle cx="182" cy="345" r="14" fill="rgba(249,131,56,.1)" stroke="rgba(249,131,56,.3)" stroke-width="1"/>
+            <circle cx="182" cy="345" r="5" fill="#ff832b" class="map-pulse"/>
+            <text x="182" y="369" text-anchor="middle" font-size="10" font-weight="700" fill="#ff832b" font-family="IBM Plex Sans, sans-serif">Latin America</text>
+          </g>
+
+          <!-- Connecting dashed routes between regions -->
+          <path d="M 148 128 Q 282 60 415 88" stroke="rgba(15,98,254,.2)" stroke-width="1.2" stroke-dasharray="5 5" fill="none"/>
+          <path d="M 415 88 Q 555 80 695 145" stroke="rgba(105,41,196,.2)" stroke-width="1.2" stroke-dasharray="5 5" fill="none"/>
+          <path d="M 415 88 Q 492 130 572 192" stroke="rgba(17,146,232,.18)" stroke-width="1.2" stroke-dasharray="5 5" fill="none"/>
+          <path d="M 148 128 Q 165 240 182 345" stroke="rgba(255,131,43,.18)" stroke-width="1.2" stroke-dasharray="5 5" fill="none"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── E) FAQ ─────────────────────────────────────────────────── -->
+<section class="contact-faq" aria-labelledby="faq-title">
+  <div class="container">
+    <div class="contact-faq__header" data-reveal>
+      <span class="section-label">FAQ</span>
+      <h2 class="section-title" id="faq-title" data-reveal data-reveal-delay="1">Frequently Asked Questions</h2>
+      <p class="section-subtitle" data-reveal data-reveal-delay="2">Quick answers to the questions we receive most often about the project and the technology behind it.</p>
+    </div>
+
+    <div class="faq-list" role="list">
+
+      <div class="faq-item" role="listitem" data-reveal data-reveal-delay="1">
+        <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-1" id="faq-q-1">
+          <span class="faq-q-text">What is IBM Granite AI?</span>
+          <span class="faq-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+        </button>
+        <div class="faq-answer" id="faq-ans-1" role="region" aria-labelledby="faq-q-1">
+          <div class="faq-answer-inner">
+            IBM Granite is a family of open, enterprise-grade foundation models developed by IBM Research. The Granite 3.3 model used in this platform is specifically designed for instruction-following, text generation, summarisation, and question-answering tasks. It is trained on carefully curated datasets with full transparency in training data sourcing — making it a responsible AI choice for academic applications. IBM Granite models are available via IBM watsonx.ai and as open-weight models on Hugging Face.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" role="listitem" data-reveal data-reveal-delay="2">
+        <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-2" id="faq-q-2">
+          <span class="faq-q-text">Is this project open source?</span>
+          <span class="faq-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+        </button>
+        <div class="faq-answer" id="faq-ans-2" role="region" aria-labelledby="faq-q-2">
+          <div class="faq-answer-inner">
+            The project is developed as part of IBM University Engagement, demonstrating the application of IBM Granite foundation models in academic settings. The front-end codebase is publicly viewable for educational reference. The AI backend components are powered by IBM watsonx.ai's managed APIs. IBM Granite model weights themselves are released under the Apache 2.0 licence and are freely available for academic and commercial use.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" role="listitem" data-reveal data-reveal-delay="3">
+        <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-3" id="faq-q-3">
+          <span class="faq-q-text">How does the AI chat feature work?</span>
+          <span class="faq-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+        </button>
+        <div class="faq-answer" id="faq-ans-3" role="region" aria-labelledby="faq-q-3">
+          <div class="faq-answer-inner">
+            The AI chat feature uses Retrieval-Augmented Generation (RAG) to ground every response in the student's own uploaded notes. When you ask a question, the system first searches your document knowledge base for the most relevant passages, then passes those passages as context to IBM Granite 3.3, which synthesises a precise, source-grounded answer. This eliminates hallucinations and ensures responses are always relevant to your course material rather than generic web knowledge.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" role="listitem" data-reveal data-reveal-delay="4">
+        <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-4" id="faq-q-4">
+          <span class="faq-q-text">Can I use this platform for my university course?</span>
+          <span class="faq-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+        </button>
+        <div class="faq-answer" id="faq-ans-4" role="region" aria-labelledby="faq-q-4">
+          <div class="faq-answer-inner">
+            Absolutely. The platform is designed for students across any discipline — upload your lecture notes, textbook excerpts, or revision summaries and let IBM Granite AI generate quizzes, flashcards, and study plans tailored to that exact content. It works with computer science, business, medicine, law, engineering, and humanities material equally well. If your institution is interested in a formal integration or partnership, please reach out via the contact form above.
+          </div>
+        </div>
+      </div>
+
+      <div class="faq-item" role="listitem" data-reveal data-reveal-delay="5">
+        <button class="faq-question" aria-expanded="false" aria-controls="faq-ans-5" id="faq-q-5">
+          <span class="faq-q-text">What technology stack does the project use?</span>
+          <span class="faq-chevron" aria-hidden="true"><i class="fa-solid fa-chevron-down"></i></span>
+        </button>
+        <div class="faq-answer" id="faq-ans-5" role="region" aria-labelledby="faq-q-5">
+          <div class="faq-answer-inner">
+            The platform is built on a modern, standards-based stack: <strong>HTML5</strong>, <strong>CSS3</strong> with custom design tokens, and <strong>vanilla JavaScript</strong> for the front end. The AI layer is powered by <strong>IBM Granite 3.3 8B Instruct</strong> served through <strong>IBM watsonx.ai</strong> APIs, deployed on <strong>IBM Cloud</strong>. Data visualisation uses <strong>Chart.js 4.4</strong>. No front-end frameworks or heavy dependencies are used — keeping the platform fast, accessible, and easy to maintain.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ──────────────────────────────────────────────────── -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer__grid">
+      <div>
+        <div class="footer__brand-logo"><span class="footer__ibm-badge">IBM</span><span class="footer__brand-name">Smart Study Generator</span></div>
+        <p class="footer__brand-desc">An AI-powered study assistant built on IBM Granite AI and watsonx.ai, developed for IBM University Engagement.</p>
+      </div>
+      <div><div class="footer__col-title">Features</div><ul class="footer__col-links"><li><a href="upload.html">Upload Notes</a></li><li><a href="chat.html">AI Chat</a></li><li><a href="quiz.html">Quiz Generator</a></li><li><a href="flashcards.html">Flashcards</a></li><li><a href="planner.html">Study Planner</a></li><li><a href="dashboard.html">Dashboard</a></li></ul></div>
+      <div><div class="footer__col-title">Technology</div><ul class="footer__col-links"><li><a href="https://www.ibm.com/granite" target="_blank" rel="noopener">IBM Granite</a></li><li><a href="https://www.ibm.com/watsonx" target="_blank" rel="noopener">IBM watsonx.ai</a></li><li><a href="https://cloud.ibm.com" target="_blank" rel="noopener">IBM Cloud</a></li></ul></div>
+      <div><div class="footer__col-title">Project</div><ul class="footer__col-links"><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="https://ibm.com/university" target="_blank" rel="noopener">IBM University</a></li></ul></div>
+    </div>
+    <div class="footer__bottom"><p class="footer__copy">© 2025 Smart Study Generator Agent — <a href="https://ibm.com/university" target="_blank" rel="noopener">IBM University Engagement Project</a></p><nav class="footer__legal"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Accessibility</a></nav></div>
+  </div>
+</footer>
+
+<script src="../js/app.js"></script>
+<script>
+'use strict';
+
+/* ── Character counter ──────────────────────────────────────── */
+const msgArea    = document.getElementById('contactMessage');
+const charCnt    = document.getElementById('charCounter');
+const MAX_CHARS  = 500;
+
+msgArea.addEventListener('input', () => {
+  const len = msgArea.value.length;
+  charCnt.textContent = `${len} / ${MAX_CHARS}`;
+  charCnt.classList.toggle('warn', len >= 400 && len < MAX_CHARS);
+  charCnt.classList.toggle('over', len >= MAX_CHARS);
+});
+
+/* ── Form validation & submit ───────────────────────────────── */
+const form       = document.getElementById('contactForm');
+const submitBtn  = document.getElementById('contactSubmit');
+const submitLbl  = document.getElementById('submitLabel');
+const submitLoad = document.getElementById('submitLoading');
+const formState  = document.getElementById('formState');
+const successSt  = document.getElementById('successState');
+const resetBtn   = document.getElementById('resetForm');
+
+function showError(id, show) {
+  const el = document.getElementById(id);
+  el.classList.toggle('show', show);
+}
+function setFieldError(input, hasError) {
+  input.classList.toggle('error', hasError);
+}
+
+function validateEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+}
+
+function validate() {
+  let valid = true;
+
+  const name    = document.getElementById('contactName');
+  const email   = document.getElementById('contactEmail');
+  const subject = document.getElementById('contactSubject');
+  const message = document.getElementById('contactMessage');
+
+  const nameOk = name.value.trim().length >= 2;
+  setFieldError(name, !nameOk);
+  showError('nameError', !nameOk);
+  if (!nameOk) valid = false;
+
+  const emailOk = validateEmail(email.value);
+  setFieldError(email, !emailOk);
+  showError('emailError', !emailOk);
+  if (!emailOk) valid = false;
+
+  const subjectOk = subject.value !== '';
+  setFieldError(subject, !subjectOk);
+  showError('subjectError', !subjectOk);
+  if (!subjectOk) valid = false;
+
+  const messageOk = message.value.trim().length >= 20;
+  setFieldError(message, !messageOk);
+  showError('messageError', !messageOk);
+  if (!messageOk) valid = false;
+
+  return valid;
+}
+
+// Clear error on input
+['contactName','contactEmail','contactSubject','contactMessage'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    el.classList.remove('error');
+    const errId = { contactName:'nameError', contactEmail:'emailError',
+                    contactSubject:'subjectError', contactMessage:'messageError' }[id];
+    showError(errId, false);
+  });
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!validate()) return;
+
+  // Loading state
+  submitBtn.disabled = true;
+  submitLbl.style.display = 'none';
+  submitLoad.classList.add('show');
+
+  // Simulate 1.5s network delay
+  await new Promise(r => setTimeout(r, 1500));
+
+  // Show success
+  submitLoad.classList.remove('show');
+  submitLbl.style.display = '';
+  submitBtn.disabled = false;
+
+  formState.style.display = 'none';
+  successSt.classList.add('show');
+
+  if (window.showToast) showToast('Message sent successfully!', 'success');
+});
+
+resetBtn.addEventListener('click', () => {
+  form.reset();
+  charCnt.textContent = '0 / 500';
+  charCnt.classList.remove('warn','over');
+  ['contactName','contactEmail','contactSubject','contactMessage'].forEach(id => {
+    document.getElementById(id).classList.remove('error');
+  });
+  ['nameError','emailError','subjectError','messageError'].forEach(id => showError(id, false));
+  successSt.classList.remove('show');
+  formState.style.display = '';
+});
+
+/* ── FAQ Accordion ───────────────────────────────────────────── */
+const faqItems = document.querySelectorAll('.faq-item');
+
+faqItems.forEach(item => {
+  const btn    = item.querySelector('.faq-question');
+  const answer = item.querySelector('.faq-answer');
+
+  btn.addEventListener('click', () => {
+    const isOpen = item.classList.contains('open');
+
+    // Close all
+    faqItems.forEach(other => {
+      other.classList.remove('open');
+      other.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+    });
+
+    // Open clicked (if it was closed)
+    if (!isOpen) {
+      item.classList.add('open');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  });
+});
+
+/* ── Map pulse dots (SVG animation already in CSS) ───────────── */
+// The map pulse animation is handled via CSS @keyframes map-pulse-anim
+// applied to circle elements with class .map-pulse. JS adds an initial
+// staggered delay via Intersection Observer so dots animate in on scroll.
+(function initMapPulse() {
+  const mapSection = document.querySelector('.contact-map-section');
+  if (!mapSection) return;
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      // dots are already animated via CSS; just ensure SVG is visible
+      document.getElementById('mapSvg')?.setAttribute('data-visible', 'true');
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.2 });
+  io.observe(mapSection);
+})();
+</script>
+</body>
+</html>

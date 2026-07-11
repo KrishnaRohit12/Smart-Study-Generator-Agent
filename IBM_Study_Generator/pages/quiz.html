@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Quiz Generator — Test your knowledge with AI-generated quizzes powered by IBM Granite AI." />
+  <meta name="theme-color" content="#0f62fe" />
+  <title>Quiz Generator | Smart Study Generator Agent</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="../css/global.css" />
+  <!-- Font Awesome 6.5 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+  /* ── Quiz Page — Inline Styles ──────────────────────────── */
+
+  /* Layout */
+  .quiz-main {
+    padding: calc(var(--nav-h) + var(--sp-12)) 0 var(--sp-20);
+    min-height: 100vh;
+    background: var(--color-surface);
+  }
+  .quiz-layout {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: var(--sp-8);
+    align-items: start;
+  }
+
+  /* ── Setup Panel ── */
+  .quiz-setup-panel {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-8);
+    position: sticky;
+    top: calc(var(--nav-h) + var(--sp-6));
+  }
+  .quiz-setup-panel__title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: var(--sp-6);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  .quiz-setup-panel__title i {
+    color: var(--blue-50);
+    font-size: 1rem;
+  }
+  .setup-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-5);
+  }
+
+  /* Difficulty radio cards */
+  .difficulty-group {
+    display: flex;
+    gap: var(--sp-2);
+  }
+  .difficulty-option {
+    flex: 1;
+  }
+  .difficulty-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .difficulty-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: var(--sp-3) var(--sp-2);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    transition: all 240ms ease;
+    text-align: center;
+  }
+  .difficulty-option label i {
+    font-size: 1rem;
+  }
+  .difficulty-option input:checked + label {
+    border-color: var(--blue-50);
+    background: var(--blue-10);
+    color: var(--blue-60);
+    box-shadow: 0 0 0 3px rgba(15,98,254,.1);
+  }
+  .difficulty-option label:hover {
+    border-color: var(--blue-40);
+    color: var(--color-text);
+  }
+  [data-theme="dark"] .difficulty-option label {
+    background: var(--color-surface);
+  }
+  [data-theme="dark"] .difficulty-option input:checked + label {
+    background: rgba(15,98,254,.18);
+    color: var(--blue-30);
+  }
+
+  /* Slider */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-2);
+  }
+  .slider-value {
+    font-size: .875rem;
+    font-weight: 700;
+    color: var(--blue-50);
+    background: var(--blue-10);
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+  }
+  input[type="range"].quiz-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--blue-50) 0%, var(--color-border) 0%);
+    border-radius: var(--radius-full);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"].quiz-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--blue-50);
+    box-shadow: 0 2px 6px rgba(15,98,254,.4);
+    cursor: pointer;
+    transition: box-shadow 240ms ease, transform 240ms ease;
+  }
+  input[type="range"].quiz-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 2px 12px rgba(15,98,254,.6);
+    transform: scale(1.15);
+  }
+  input[type="range"].quiz-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--blue-50);
+    border: none;
+    cursor: pointer;
+  }
+
+  /* Quick Start */
+  .quick-start {
+    margin-top: var(--sp-6);
+    padding-top: var(--sp-6);
+    border-top: 1px solid var(--color-border);
+  }
+  .quick-start__label {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--sp-3);
+  }
+  .quick-chips {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+  }
+  .quick-chip {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: .875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 240ms ease;
+    text-align: left;
+  }
+  .quick-chip i {
+    color: var(--blue-50);
+    font-size: .875rem;
+    width: 16px;
+    flex-shrink: 0;
+  }
+  .quick-chip:hover {
+    border-color: var(--blue-40);
+    background: var(--blue-10);
+    transform: translateX(3px);
+  }
+  [data-theme="dark"] .quick-chip:hover {
+    background: rgba(15,98,254,.12);
+  }
+
+  /* ── Quiz Area ── */
+  .quiz-area-wrap {
+    min-height: 520px;
+  }
+
+  /* Empty state */
+  .quiz-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 480px;
+    text-align: center;
+    padding: var(--sp-12);
+    background: var(--color-bg);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-xl);
+    color: var(--color-text-muted);
+  }
+  .quiz-empty-state__icon {
+    font-size: 3rem;
+    color: var(--blue-30);
+    margin-bottom: var(--sp-4);
+    opacity: .6;
+  }
+  .quiz-empty-state h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--sp-2);
+  }
+  .quiz-empty-state p {
+    font-size: .9375rem;
+    max-width: 300px;
+    line-height: 1.6;
+  }
+
+  /* Generating state */
+  .quiz-generating {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 480px;
+    text-align: center;
+    gap: var(--sp-5);
+  }
+  .quiz-generating.active { display: flex; }
+  .generating-spinner {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 4px solid var(--blue-20);
+    border-top-color: var(--blue-50);
+    animation: spin .8s linear infinite;
+  }
+  .generating-text {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--color-text);
+  }
+  .generating-sub {
+    font-size: .875rem;
+    color: var(--color-text-muted);
+  }
+
+  /* Progress Bar */
+  .quiz-progress-wrap {
+    margin-bottom: var(--sp-5);
+  }
+  .quiz-progress-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-2);
+    font-size: .8125rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+  .quiz-progress-bar {
+    height: 5px;
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+  .quiz-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue-50), var(--blue-40));
+    border-radius: var(--radius-full);
+    transition: width 400ms cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Question Card */
+  #quizArea {
+    display: none;
+  }
+  #quizArea.active { display: block; }
+
+  .question-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-8) var(--sp-8) var(--sp-6);
+    margin-bottom: var(--sp-5);
+  }
+  .question-card__label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    color: var(--blue-50);
+    margin-bottom: var(--sp-3);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .question-card__text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.5;
+    margin-bottom: var(--sp-6);
+  }
+
+  /* Answer Options */
+  .answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+  }
+  .answer-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    width: 100%;
+    padding: var(--sp-4) var(--sp-5);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: .9375rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 240ms ease;
+    text-align: left;
+  }
+  .answer-btn:hover:not(:disabled) {
+    border-color: var(--blue-40);
+    background: var(--blue-10);
+    transform: translateX(5px);
+    box-shadow: var(--shadow-sm);
+  }
+  [data-theme="dark"] .answer-btn:hover:not(:disabled) {
+    background: rgba(15,98,254,.12);
+  }
+  .answer-btn:disabled { cursor: default; }
+  .answer-btn.correct {
+    border-color: var(--green-50);
+    background: var(--green-10);
+    color: var(--green-50);
+    font-weight: 600;
+  }
+  .answer-btn.wrong {
+    border-color: var(--red-50);
+    background: var(--red-10);
+    color: var(--red-50);
+    font-weight: 600;
+  }
+  .answer-btn__key {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-md);
+    background: var(--color-border);
+    font-size: .75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    color: var(--color-text-muted);
+    transition: background 240ms ease, color 240ms ease;
+  }
+  .answer-btn.correct .answer-btn__key {
+    background: var(--green-50);
+    color: #fff;
+  }
+  .answer-btn.wrong .answer-btn__key {
+    background: var(--red-50);
+    color: #fff;
+  }
+  .answer-btn__icon {
+    margin-left: auto;
+    font-size: .875rem;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 240ms ease;
+  }
+  .answer-btn.correct .answer-btn__icon,
+  .answer-btn.wrong   .answer-btn__icon { opacity: 1; }
+
+  /* Explanation */
+  .explanation-box {
+    display: none;
+    margin-top: var(--sp-4);
+    padding: var(--sp-4);
+    background: var(--blue-10);
+    border: 1px solid var(--blue-20);
+    border-radius: var(--radius-lg);
+    font-size: .875rem;
+    color: var(--blue-60);
+    line-height: 1.65;
+  }
+  [data-theme="dark"] .explanation-box {
+    background: rgba(15,98,254,.12);
+    border-color: rgba(15,98,254,.25);
+    color: var(--blue-30);
+  }
+  .explanation-box.show { display: flex; gap: var(--sp-3); align-items: flex-start; }
+  .explanation-box i { flex-shrink: 0; margin-top: 2px; }
+
+  /* Next Button */
+  .quiz-nav-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--sp-4);
+  }
+  #nextBtn {
+    display: none;
+  }
+  #nextBtn.show { display: inline-flex; }
+
+  /* ── Results ── */
+  #quizResults {
+    display: none;
+  }
+  #quizResults.active { display: block; }
+
+  .results-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-10) var(--sp-8);
+    text-align: center;
+    margin-bottom: var(--sp-6);
+  }
+  .results-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    background: var(--blue-10);
+    border: 1px solid var(--blue-20);
+    border-radius: var(--radius-full);
+    padding: 5px 14px;
+    font-size: .72rem;
+    font-weight: 700;
+    color: var(--blue-60);
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    margin-bottom: var(--sp-5);
+  }
+  [data-theme="dark"] .results-badge { background: rgba(15,98,254,.18); color: var(--blue-30); }
+  .results-score-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-8);
+    margin-bottom: var(--sp-6);
+    flex-wrap: wrap;
+  }
+  .results-score-text {
+    text-align: left;
+  }
+  .results-score-big {
+    font-size: 4rem;
+    font-weight: 700;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--blue-50), var(--blue-40));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .results-score-label {
+    font-size: .9375rem;
+    color: var(--color-text-muted);
+    margin-top: 4px;
+  }
+  .results-donut {
+    flex-shrink: 0;
+  }
+  .results-donut svg {
+    transform: rotate(-90deg);
+  }
+  .donut-bg { fill: none; }
+  .donut-track { fill: none; stroke: var(--color-border); stroke-width: 8; }
+  .donut-fill {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 251.2;
+    stroke-dashoffset: 251.2;
+    transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+  }
+  .donut-pct {
+    font-size: 1.125rem;
+    font-weight: 700;
+    fill: var(--color-text);
+    transform: rotate(90deg);
+    transform-origin: center;
+    dominant-baseline: middle;
+    text-anchor: middle;
+  }
+  .results-message {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--sp-2);
+  }
+  .results-sub {
+    font-size: .9375rem;
+    color: var(--color-text-muted);
+  }
+  .results-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--sp-3);
+    margin-top: var(--sp-6);
+    flex-wrap: wrap;
+  }
+
+  /* Review List */
+  .review-section {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .review-section__header {
+    padding: var(--sp-5) var(--sp-6);
+    border-bottom: 1px solid var(--color-border);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  .review-section__header i { color: var(--blue-50); }
+  .review-list {
+    display: flex;
+    flex-direction: column;
+  }
+  .review-item {
+    padding: var(--sp-4) var(--sp-6);
+    border-bottom: 1px solid var(--color-border);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--sp-4);
+    align-items: start;
+    transition: background 240ms ease;
+  }
+  .review-item:last-child { border-bottom: none; }
+  .review-item:hover { background: var(--color-surface); }
+  .review-item__num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .review-item__num.pass { background: var(--green-10); color: var(--green-50); }
+  .review-item__num.fail { background: var(--red-10); color: var(--red-50); }
+  .review-item__q {
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 4px;
+    line-height: 1.45;
+  }
+  .review-item__ans {
+    font-size: .8125rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+  }
+  .review-item__ans span { font-weight: 600; }
+  .review-item__ans .your-ans.wrong { color: var(--red-50); }
+  .review-item__ans .your-ans.correct-ans { color: var(--green-50); }
+  .review-item__icon {
+    font-size: .9375rem;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+  .review-item__icon.pass { color: var(--green-50); }
+  .review-item__icon.fail { color: var(--red-50); }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .quiz-layout {
+      grid-template-columns: 1fr;
+    }
+    .quiz-setup-panel {
+      position: static;
+    }
+  }
+  @media (max-width: 600px) {
+    .results-score-wrap { gap: var(--sp-5); }
+    .results-score-big { font-size: 3rem; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     NAVIGATION
+════════════════════════════════════════════════════════ -->
+<header id="nav" class="nav" role="banner">
+  <div class="container nav__inner">
+    <a href="../index.html" class="nav__logo" aria-label="Smart Study Generator home">
+      <span class="nav__logo-badge">IBM</span>
+      <span class="nav__logo-text">Smart Study Generator</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary navigation">
+      <a href="../index.html"   class="nav__link">Home</a>
+      <a href="upload.html"     class="nav__link">Upload Notes</a>
+      <a href="chat.html"       class="nav__link">AI Chat</a>
+      <a href="quiz.html"       class="nav__link active">Quiz</a>
+      <a href="flashcards.html" class="nav__link">Flashcards</a>
+      <a href="planner.html"    class="nav__link">Study Planner</a>
+      <a href="dashboard.html"  class="nav__link">Dashboard</a>
+      <a href="about.html"      class="nav__link">About</a>
+      <a href="contact.html"    class="nav__link">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <button class="nav__theme-btn" id="themeToggle" aria-label="Toggle dark mode">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+      <a href="dashboard.html" class="btn btn-primary btn-sm">Dashboard</a>
+    </div>
+    <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="nav__toggle-bar"></span>
+      <span class="nav__toggle-bar"></span>
+      <span class="nav__toggle-bar"></span>
+    </button>
+  </div>
+  <nav class="nav__mobile" aria-label="Mobile navigation">
+    <a href="../index.html"   class="nav__link">Home</a>
+    <a href="upload.html"     class="nav__link">Upload Notes</a>
+    <a href="chat.html"       class="nav__link">AI Chat</a>
+    <a href="quiz.html"       class="nav__link active">Quiz</a>
+    <a href="flashcards.html" class="nav__link">Flashcards</a>
+    <a href="planner.html"    class="nav__link">Study Planner</a>
+    <a href="dashboard.html"  class="nav__link">Dashboard</a>
+    <a href="about.html"      class="nav__link">About</a>
+    <a href="contact.html"    class="nav__link">Contact</a>
+    <a href="dashboard.html" class="btn btn-primary" style="margin-top:.5rem;">Dashboard</a>
+  </nav>
+</header>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE HERO
+════════════════════════════════════════════════════════ -->
+<section class="page-hero" aria-label="Quiz Generator hero">
+  <div class="page-hero__bg" aria-hidden="true"></div>
+  <div class="container page-hero__inner" data-reveal>
+    <div class="page-hero-badge">
+      <span class="page-hero-badge__dot" aria-hidden="true"></span>
+      Quiz Generator &middot; IBM Granite AI
+    </div>
+    <h1 class="page-hero__title">
+      Test Your <span class="page-hero__accent">Knowledge</span>
+    </h1>
+    <p class="page-hero__sub">
+      Select a subject, pick your difficulty, and let IBM Granite AI generate a personalised quiz
+      that challenges exactly what you need to learn.
+    </p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     QUIZ MAIN
+════════════════════════════════════════════════════════ -->
+<main class="quiz-main" id="quizMain">
+  <div class="container">
+    <div class="quiz-layout">
+
+      <!-- ── Left: Setup Panel ── -->
+      <aside aria-label="Quiz setup">
+        <div class="quiz-setup-panel" id="setupPanel">
+          <div class="quiz-setup-panel__title">
+            <i class="fa-solid fa-sliders"></i>
+            Configure Your Quiz
+          </div>
+
+          <form class="setup-form" id="setupForm" onsubmit="return false;">
+
+            <!-- Subject -->
+            <div class="form-group">
+              <label class="form-label" for="quizSubject">
+                <i class="fa-solid fa-book" style="color:var(--blue-50)"></i>
+                Subject
+              </label>
+              <select class="form-select" id="quizSubject" aria-required="true">
+                <option value="">— Select a subject —</option>
+                <option value="Machine Learning">Machine Learning</option>
+                <option value="Data Structures">Data Structures</option>
+                <option value="Algorithms">Algorithms</option>
+                <option value="Operating Systems">Operating Systems</option>
+                <option value="Computer Networks">Computer Networks</option>
+                <option value="Database Systems">Database Systems</option>
+                <option value="Software Engineering">Software Engineering</option>
+                <option value="Quantum Computing">Quantum Computing</option>
+              </select>
+            </div>
+
+            <!-- Difficulty -->
+            <div class="form-group">
+              <span class="form-label">
+                <i class="fa-solid fa-gauge-high" style="color:var(--blue-50)"></i>
+                Difficulty
+              </span>
+              <div class="difficulty-group" role="radiogroup" aria-label="Quiz difficulty">
+                <div class="difficulty-option">
+                  <input type="radio" name="difficulty" id="diffEasy" value="Easy">
+                  <label for="diffEasy">
+                    <i class="fa-solid fa-seedling" style="color:var(--green-50)"></i>
+                    Easy
+                  </label>
+                </div>
+                <div class="difficulty-option">
+                  <input type="radio" name="difficulty" id="diffMedium" value="Medium" checked>
+                  <label for="diffMedium">
+                    <i class="fa-solid fa-bolt" style="color:var(--yellow-30)"></i>
+                    Medium
+                  </label>
+                </div>
+                <div class="difficulty-option">
+                  <input type="radio" name="difficulty" id="diffHard" value="Hard">
+                  <label for="diffHard">
+                    <i class="fa-solid fa-fire" style="color:var(--red-50)"></i>
+                    Hard
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Question Count -->
+            <div class="form-group">
+              <div class="slider-row">
+                <label class="form-label" for="questionCount" style="margin:0;">
+                  <i class="fa-solid fa-list-ol" style="color:var(--blue-50)"></i>
+                  Questions
+                </label>
+                <span class="slider-value" id="sliderLabel">10</span>
+              </div>
+              <input
+                type="range"
+                class="quiz-slider"
+                id="questionCount"
+                min="5"
+                max="20"
+                value="10"
+                step="1"
+                aria-label="Number of questions"
+              />
+              <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--color-text-muted);margin-top:4px;">
+                <span>5</span><span>20</span>
+              </div>
+            </div>
+
+            <!-- Topic (optional) -->
+            <div class="form-group">
+              <label class="form-label" for="quizTopic">
+                <i class="fa-solid fa-tag" style="color:var(--blue-50)"></i>
+                Specific Topic
+                <span style="font-weight:400;color:var(--color-text-muted);font-size:.8rem;">(optional)</span>
+              </label>
+              <input
+                type="text"
+                class="form-input"
+                id="quizTopic"
+                placeholder="e.g. Neural Networks, Binary Trees…"
+                maxlength="80"
+              />
+            </div>
+
+            <!-- Generate -->
+            <button type="button" class="btn btn-primary btn-lg" id="generateQuizBtn"
+                    style="width:100%;justify-content:center;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              Generate Quiz
+            </button>
+          </form>
+
+          <!-- Quick Start -->
+          <div class="quick-start">
+            <div class="quick-start__label">Quick Start</div>
+            <div class="quick-chips">
+              <button class="quick-chip" data-subject="Machine Learning" data-count="10" data-diff="Medium">
+                <i class="fa-solid fa-brain"></i>
+                Machine Learning — 10 Qs · Medium
+              </button>
+              <button class="quick-chip" data-subject="Data Structures" data-count="8" data-diff="Easy">
+                <i class="fa-solid fa-sitemap"></i>
+                Data Structures — 8 Qs · Easy
+              </button>
+              <button class="quick-chip" data-subject="Algorithms" data-count="10" data-diff="Hard">
+                <i class="fa-solid fa-code"></i>
+                Algorithms — 10 Qs · Hard
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- ── Right: Quiz Content ── -->
+      <div class="quiz-area-wrap" id="quizAreaWrap">
+
+        <!-- Empty state (shown initially) -->
+        <div class="quiz-empty-state" id="quizEmptyState">
+          <div class="quiz-empty-state__icon">
+            <i class="fa-solid fa-circle-question"></i>
+          </div>
+          <h3>Ready to be tested?</h3>
+          <p>Choose a subject and click <strong>Generate Quiz</strong> to get AI-crafted questions tailored to your level.</p>
+        </div>
+
+        <!-- Generating animation -->
+        <div class="quiz-generating" id="quizGenerating" aria-live="polite" aria-label="Generating quiz">
+          <div class="generating-spinner" role="status"></div>
+          <div class="generating-text">Generating your quiz…</div>
+          <div class="generating-sub" id="generatingSubText">Crafting questions with IBM Granite AI</div>
+        </div>
+
+        <!-- Active Quiz -->
+        <div id="quizArea" role="main" aria-label="Quiz questions">
+
+          <!-- Progress -->
+          <div class="quiz-progress-wrap">
+            <div class="quiz-progress-meta">
+              <span id="progressLabel">Question 1 of 10</span>
+              <span id="progressScore">0 correct</span>
+            </div>
+            <div class="quiz-progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+              <div class="quiz-progress-fill" id="progressFill" style="width:0%"></div>
+            </div>
+          </div>
+
+          <!-- Question -->
+          <div class="question-card" id="questionCard">
+            <div class="question-card__label">
+              <i class="fa-solid fa-circle-question"></i>
+              <span id="questionLabel">Question 1</span>
+            </div>
+            <p class="question-card__text" id="questionText"></p>
+
+            <!-- Answer options -->
+            <div class="answer-options" id="answerOptions" role="list">
+              <button class="answer-btn" data-idx="0" role="listitem">
+                <span class="answer-btn__key">1</span>
+                <span class="answer-btn__text"></span>
+                <i class="answer-btn__icon fa-solid"></i>
+              </button>
+              <button class="answer-btn" data-idx="1" role="listitem">
+                <span class="answer-btn__key">2</span>
+                <span class="answer-btn__text"></span>
+                <i class="answer-btn__icon fa-solid"></i>
+              </button>
+              <button class="answer-btn" data-idx="2" role="listitem">
+                <span class="answer-btn__key">3</span>
+                <span class="answer-btn__text"></span>
+                <i class="answer-btn__icon fa-solid"></i>
+              </button>
+              <button class="answer-btn" data-idx="3" role="listitem">
+                <span class="answer-btn__key">4</span>
+                <span class="answer-btn__text"></span>
+                <i class="answer-btn__icon fa-solid"></i>
+              </button>
+            </div>
+
+            <!-- Explanation -->
+            <div class="explanation-box" id="explanationBox">
+              <i class="fa-solid fa-lightbulb"></i>
+              <span id="explanationText"></span>
+            </div>
+          </div>
+
+          <!-- Next -->
+          <div class="quiz-nav-row">
+            <button class="btn btn-primary" id="nextBtn" aria-label="Next question">
+              Next <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div id="quizResults" role="region" aria-label="Quiz results">
+
+          <div class="results-card">
+            <div class="results-badge">
+              <i class="fa-solid fa-trophy"></i>
+              Quiz Complete
+            </div>
+
+            <div class="results-score-wrap">
+              <div class="results-score-text">
+                <div class="results-score-big" id="resultScoreBig">0/10</div>
+                <div class="results-score-label" id="resultScoreLabel">questions answered correctly</div>
+              </div>
+              <div class="results-donut" aria-hidden="true">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                  <circle class="donut-track" cx="50" cy="50" r="40" />
+                  <circle class="donut-fill" id="donutFill" cx="50" cy="50" r="40"
+                          stroke="var(--blue-50)" />
+                  <text class="donut-pct" id="donutPct" x="50" y="50">0%</text>
+                </svg>
+              </div>
+            </div>
+
+            <p class="results-message" id="resultMessage">Keep practising!</p>
+            <p class="results-sub" id="resultSub">Every attempt builds your understanding.</p>
+
+            <div class="results-actions">
+              <button class="btn btn-outline" id="restartQuizBtn">
+                <i class="fa-solid fa-rotate-left"></i>
+                Restart Quiz
+              </button>
+              <button class="btn btn-ghost" id="shareScoreBtn">
+                <i class="fa-solid fa-share-nodes"></i>
+                Share Score
+              </button>
+              <a href="quiz.html" class="btn btn-ghost">
+                <i class="fa-solid fa-plus"></i>
+                New Quiz
+              </a>
+            </div>
+          </div>
+
+          <!-- Per-question review -->
+          <div class="review-section" id="reviewSection">
+            <div class="review-section__header">
+              <i class="fa-solid fa-clipboard-list"></i>
+              Question Review
+            </div>
+            <div class="review-list" id="reviewList"></div>
+          </div>
+        </div>
+
+      </div>
+      <!-- /Quiz Content -->
+
+    </div>
+  </div>
+</main>
+
+<!-- ════════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════ -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer__grid">
+      <div>
+        <div class="footer__brand-logo">
+          <span class="footer__ibm-badge">IBM</span>
+          <span class="footer__brand-name">Smart Study Generator</span>
+        </div>
+        <p class="footer__brand-desc">
+          An AI-powered study assistant built on IBM Granite AI and watsonx.ai, developed for IBM University Engagement.
+        </p>
+      </div>
+      <div>
+        <div class="footer__col-title">Features</div>
+        <ul class="footer__col-links">
+          <li><a href="upload.html">Upload Notes</a></li>
+          <li><a href="chat.html">AI Chat</a></li>
+          <li><a href="quiz.html">Quiz Generator</a></li>
+          <li><a href="flashcards.html">Flashcards</a></li>
+          <li><a href="planner.html">Study Planner</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer__col-title">Technology</div>
+        <ul class="footer__col-links">
+          <li><a href="https://www.ibm.com/granite" target="_blank" rel="noopener noreferrer">IBM Granite</a></li>
+          <li><a href="https://www.ibm.com/watsonx" target="_blank" rel="noopener noreferrer">IBM watsonx.ai</a></li>
+          <li><a href="https://cloud.ibm.com"       target="_blank" rel="noopener noreferrer">IBM Cloud</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer__col-title">Project</div>
+        <ul class="footer__col-links">
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="https://ibm.com/university" target="_blank" rel="noopener noreferrer">IBM University</a></li>
+          <li><a href="#">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p class="footer__copy">
+        &copy; 2025 Smart Study Generator Agent &mdash;
+        <a href="https://ibm.com/university" target="_blank" rel="noopener noreferrer">IBM University Engagement Project</a>
+      </p>
+      <nav class="footer__legal" aria-label="Legal links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Accessibility</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<!-- ── Shared JS ── -->
+<script src="../js/app.js"></script>
+
+<!-- ── Quiz JS ── -->
+<script>
+'use strict';
+
+/* ─── Quiz Data ─────────────────────────────────────────────── */
+const QUIZ_DATA = {
+  "Machine Learning": [
+    {q:"What does 'supervised learning' mean?",opts:["Model trained with labelled data","Model trained without labels","Reinforcement learning technique","Unsupervised clustering"],correct:0,exp:"Supervised learning uses labelled input-output pairs to train models."},
+    {q:"Which algorithm is used to minimize loss in neural networks?",opts:["K-Means","Gradient Descent","Decision Tree","Naive Bayes"],correct:1,exp:"Gradient Descent iteratively adjusts weights to minimize the loss function."},
+    {q:"What is overfitting?",opts:["Model performs well on new data","Model memorizes training data","Model underfits the data","Model has high bias"],correct:1,exp:"Overfitting means the model learns noise in training data and performs poorly on unseen data."},
+    {q:"What does CNN stand for?",opts:["Cyclic Neural Net","Convolutional Neural Network","Complex Node Network","Conditioned Neural Net"],correct:1,exp:"CNN stands for Convolutional Neural Network, used mainly for image processing."},
+    {q:"What is the purpose of a validation set?",opts:["Train the model","Test final performance","Tune hyperparameters","Visualize data"],correct:2,exp:"The validation set is used to tune hyperparameters and prevent overfitting."},
+    {q:"What is regularization?",opts:["Adding more data","Penalizing model complexity","Increasing learning rate","Removing features"],correct:1,exp:"Regularization adds a penalty for model complexity to prevent overfitting."},
+    {q:"What does PCA stand for?",opts:["Principal Component Analysis","Partial Cluster Algorithm","Projected Compound Array","Predictive Cluster Analysis"],correct:0,exp:"PCA is a dimensionality reduction technique that finds principal components."},
+    {q:"What is the activation function in neural networks?",opts:["Calculates gradient","Introduces non-linearity","Normalizes weights","Computes loss"],correct:1,exp:"Activation functions introduce non-linearity, enabling networks to learn complex patterns."},
+    {q:"What is a confusion matrix?",opts:["Matrix of weights","Table of prediction results","Loss visualization","Feature matrix"],correct:1,exp:"A confusion matrix shows TP, FP, TN, FN to evaluate classifier performance."},
+    {q:"What is transfer learning?",opts:["Training from scratch","Using pretrained model on new task","Moving data between servers","Transferring labels"],correct:1,exp:"Transfer learning reuses a model trained on one task for a related task."},
+  ],
+  "Data Structures": [
+    {q:"What is the time complexity of binary search?",opts:["O(n)","O(n²)","O(log n)","O(1)"],correct:2,exp:"Binary search halves the search space each step, giving O(log n) complexity."},
+    {q:"Which data structure uses LIFO order?",opts:["Queue","Stack","Heap","Linked List"],correct:1,exp:"A Stack uses Last-In-First-Out (LIFO) order."},
+    {q:"What is a balanced BST?",opts:["Tree with equal nodes","Tree with height O(log n)","Tree with no leaves","Sorted array"],correct:1,exp:"A balanced BST maintains height O(log n) for efficient operations."},
+    {q:"What does BFS stand for?",opts:["Binary First Search","Breadth-First Search","Block File System","Base File Scan"],correct:1,exp:"BFS (Breadth-First Search) explores nodes level by level."},
+    {q:"What is the worst-case complexity of QuickSort?",opts:["O(n log n)","O(n)","O(n²)","O(log n)"],correct:2,exp:"QuickSort has O(n²) worst case when the pivot is always the min or max element."},
+    {q:"Which data structure is best for implementing a priority queue?",opts:["Array","Linked List","Heap","Stack"],correct:2,exp:"A Heap provides O(log n) insertion and O(1) peek for priority queues."},
+    {q:"What is a hash collision?",opts:["Hash function error","Two keys map to same index","Overflow of hash table","Corrupted hash"],correct:1,exp:"A collision occurs when two different keys hash to the same table index."},
+    {q:"What is the space complexity of DFS on a graph with V vertices?",opts:["O(1)","O(V)","O(V²)","O(E)"],correct:1,exp:"DFS uses O(V) space for the recursion stack in the worst case."},
+    {q:"What is a doubly linked list?",opts:["List with two heads","List where each node has next and prev pointers","Circular linked list","Two separate lists"],correct:1,exp:"A doubly linked list has both next and previous pointers in each node."},
+    {q:"What is memoization?",opts:["Memory compression","Caching results of expensive function calls","Dynamic programming base","Graph traversal"],correct:1,exp:"Memoization stores results of expensive function calls to avoid recomputation."},
+  ]
+};
+
+/* ─── State ──────────────────────────────────────────────────── */
+let quizQuestions  = [];
+let currentIdx     = 0;
+let correctCount   = 0;
+let userAnswers    = [];
+let quizSubjectName = '';
+let quizDifficulty  = '';
+let answered       = false;
+
+/* ─── DOM refs ───────────────────────────────────────────────── */
+const emptyState      = document.getElementById('quizEmptyState');
+const generatingEl    = document.getElementById('quizGenerating');
+const generatingSubEl = document.getElementById('generatingSubText');
+const quizArea        = document.getElementById('quizArea');
+const quizResults     = document.getElementById('quizResults');
+
+const questionLabel   = document.getElementById('questionLabel');
+const questionText    = document.getElementById('questionText');
+const answerOptions   = document.getElementById('answerOptions');
+const explanationBox  = document.getElementById('explanationBox');
+const explanationText = document.getElementById('explanationText');
+const nextBtn         = document.getElementById('nextBtn');
+
+const progressLabel   = document.getElementById('progressLabel');
+const progressScore   = document.getElementById('progressScore');
+const progressFill    = document.getElementById('progressFill');
+const progressBar     = progressFill.closest('[role="progressbar"]');
+
+const resultScoreBig  = document.getElementById('resultScoreBig');
+const resultScoreLabel= document.getElementById('resultScoreLabel');
+const resultMessage   = document.getElementById('resultMessage');
+const resultSub       = document.getElementById('resultSub');
+const donutFill       = document.getElementById('donutFill');
+const donutPct        = document.getElementById('donutPct');
+const reviewList      = document.getElementById('reviewList');
+
+/* ─── Slider live label ──────────────────────────────────────── */
+const slider     = document.getElementById('questionCount');
+const sliderLabel= document.getElementById('sliderLabel');
+slider.addEventListener('input', () => {
+  sliderLabel.textContent = slider.value;
+  const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+  slider.style.background =
+    `linear-gradient(90deg, var(--blue-50) ${pct}%, var(--color-border) ${pct}%)`;
+});
+// Init gradient
+(function() {
+  const pct = ((slider.value - slider.min) / (slider.max - slider.min)) * 100;
+  slider.style.background =
+    `linear-gradient(90deg, var(--blue-50) ${pct}%, var(--color-border) ${pct}%)`;
+})();
+
+/* ─── Quick-start chips ──────────────────────────────────────── */
+document.querySelectorAll('.quick-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const subject = chip.dataset.subject;
+    const count   = parseInt(chip.dataset.count, 10);
+    const diff    = chip.dataset.diff;
+    document.getElementById('quizSubject').value = subject;
+    slider.value = count;
+    sliderLabel.textContent = count;
+    const pct = ((count - 5) / (20 - 5)) * 100;
+    slider.style.background =
+      `linear-gradient(90deg, var(--blue-50) ${pct}%, var(--color-border) ${pct}%)`;
+    document.querySelectorAll('input[name="difficulty"]').forEach(r => {
+      r.checked = (r.value === diff);
+    });
+    generateQuiz();
+  });
+});
+
+/* ─── Generate button ────────────────────────────────────────── */
+document.getElementById('generateQuizBtn').addEventListener('click', generateQuiz);
+
+/* ─── generateQuiz() ─────────────────────────────────────────── */
+function generateQuiz() {
+  const subjectEl = document.getElementById('quizSubject');
+  const subject   = subjectEl.value.trim();
+  if (!subject) {
+    subjectEl.focus();
+    subjectEl.classList.add('error');
+    setTimeout(() => subjectEl.classList.remove('error'), 1800);
+    showToast('Please select a subject first.', 'error');
+    return;
+  }
+  const count = parseInt(slider.value, 10);
+  quizDifficulty  = document.querySelector('input[name="difficulty"]:checked')?.value || 'Medium';
+  quizSubjectName = subject;
+
+  // Show generating state
+  hideAll();
+  generatingEl.classList.add('active');
+  generatingSubEl.textContent = `Crafting ${count} ${quizDifficulty.toLowerCase()} questions on ${subject}…`;
+
+  setTimeout(() => {
+    quizQuestions = buildQuestions(subject, count);
+    currentIdx    = 0;
+    correctCount  = 0;
+    userAnswers   = new Array(quizQuestions.length).fill(null);
+    generatingEl.classList.remove('active');
+    renderQuestion(0);
+    quizArea.classList.add('active');
+  }, 1100);
+}
+
+/* ─── buildQuestions() ───────────────────────────────────────── */
+function buildQuestions(subject, count) {
+  let pool = QUIZ_DATA[subject] ? [...QUIZ_DATA[subject]] : generatePlaceholders(subject, 10);
+  // Shuffle pool
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  // If pool smaller than requested, cycle
+  while (pool.length < count) pool = [...pool, ...pool];
+  return pool.slice(0, count);
+}
+
+/* ─── generatePlaceholders() ────────────────────────────────── */
+function generatePlaceholders(subject, n) {
+  const templates = [
+    { q:`What is the primary goal of ${subject}?`,
+      opts:[`To optimise system performance`,`To model and solve domain problems`,`To reduce code complexity`,`To automate testing`],
+      correct:1, exp:`${subject} focuses on modelling and solving problems specific to its domain.` },
+    { q:`Which concept is foundational to ${subject}?`,
+      opts:[`Object-oriented design`,`Abstraction and decomposition`,`Memory management`,`Network protocols`],
+      correct:1, exp:`Abstraction and decomposition are core to structuring problems in ${subject}.` },
+    { q:`What does a practitioner of ${subject} primarily work with?`,
+      opts:[`Hardware schematics`,`Domain-specific models and data`,`UI design tools`,`Operating system kernels`],
+      correct:1, exp:`${subject} practitioners work primarily with domain-specific models and datasets.` },
+    { q:`Which skill is most critical in ${subject}?`,
+      opts:[`Graphic design`,`Analytical thinking and problem solving`,`Video editing`,`Project scheduling`],
+      correct:1, exp:`Analytical thinking underpins all work in ${subject}.` },
+    { q:`How is quality typically measured in ${subject}?`,
+      opts:[`Lines of code written`,`Performance against defined metrics`,`Number of team members`,`Time spent planning`],
+      correct:1, exp:`Quality in ${subject} is assessed by measuring performance against specific metrics.` },
+    { q:`What role does iteration play in ${subject}?`,
+      opts:[`No role — solutions are built once`,`Critical — solutions are refined through repeated testing`,`Minor — only used at the start`,`Negative — it increases cost`],
+      correct:1, exp:`Iterative refinement is essential in ${subject} to improve solutions progressively.` },
+    { q:`Which tool category is most associated with ${subject}?`,
+      opts:[`Spreadsheet software`,`Domain-specific frameworks and libraries`,`Image editors`,`Calendar applications`],
+      correct:1, exp:`${subject} relies on specialised frameworks and libraries for its workflows.` },
+    { q:`What challenge is unique to ${subject}?`,
+      opts:[`Choosing a font`,`Handling domain-specific data complexity`,`Writing emails`,`Booking meetings`],
+      correct:1, exp:`Managing domain-specific data complexity is a distinguishing challenge in ${subject}.` },
+    { q:`What does evaluation mean in the context of ${subject}?`,
+      opts:[`Counting files on disk`,`Assessing solution performance against benchmarks`,`Reviewing meeting notes`,`Checking font sizes`],
+      correct:1, exp:`Evaluation in ${subject} means rigorously comparing solutions to established benchmarks.` },
+    { q:`Which principle guides best practices in ${subject}?`,
+      opts:[`Use the most complex solution available`,`Keep it simple, measure rigorously, iterate`,`Avoid automation`,`Prioritise aesthetics over function`],
+      correct:1, exp:`Best practices in ${subject} emphasise simplicity, rigorous measurement, and iteration.` },
+  ];
+  return templates.slice(0, n);
+}
+
+/* ─── renderQuestion() ───────────────────────────────────────── */
+function renderQuestion(idx) {
+  answered = false;
+  const q   = quizQuestions[idx];
+  const num = idx + 1;
+  const tot = quizQuestions.length;
+
+  questionLabel.textContent = `Question ${num}`;
+  questionText.textContent  = q.q;
+
+  // Update progress
+  const pct = Math.round(((num - 1) / tot) * 100);
+  progressFill.style.width = pct + '%';
+  progressBar.setAttribute('aria-valuenow', pct);
+  progressLabel.textContent = `Question ${num} of ${tot}`;
+  progressScore.textContent = `${correctCount} correct`;
+
+  // Reset explanation
+  explanationBox.classList.remove('show');
+  nextBtn.classList.remove('show');
+
+  // Render options
+  const btns = answerOptions.querySelectorAll('.answer-btn');
+  btns.forEach((btn, i) => {
+    btn.classList.remove('correct', 'wrong');
+    btn.disabled = false;
+    btn.querySelector('.answer-btn__text').textContent = q.opts[i];
+    const icon = btn.querySelector('.answer-btn__icon');
+    icon.className = 'answer-btn__icon fa-solid';
+  });
+}
+
+/* ─── selectAnswer() ─────────────────────────────────────────── */
+function selectAnswer(optionIdx) {
+  if (answered) return;
+  answered = true;
+
+  const q    = quizQuestions[currentIdx];
+  const btns = answerOptions.querySelectorAll('.answer-btn');
+  userAnswers[currentIdx] = optionIdx;
+
+  btns.forEach((btn, i) => {
+    btn.disabled = true;
+    if (i === q.correct) {
+      btn.classList.add('correct');
+      btn.querySelector('.answer-btn__icon').classList.add('fa-circle-check');
+    }
+    if (i === optionIdx && optionIdx !== q.correct) {
+      btn.classList.add('wrong');
+      btn.querySelector('.answer-btn__icon').classList.add('fa-circle-xmark');
+    }
+  });
+
+  if (optionIdx === q.correct) correctCount++;
+
+  // Show explanation
+  explanationText.textContent = q.exp;
+  explanationBox.classList.add('show');
+
+  // Show next / finish
+  nextBtn.classList.add('show');
+  const isLast = currentIdx === quizQuestions.length - 1;
+  nextBtn.innerHTML = isLast
+    ? '<i class="fa-solid fa-flag-checkered"></i> See Results'
+    : 'Next <i class="fa-solid fa-arrow-right"></i>';
+  nextBtn.focus();
+}
+
+/* ─── nextQuestion() ─────────────────────────────────────────── */
+function nextQuestion() {
+  if (currentIdx < quizQuestions.length - 1) {
+    currentIdx++;
+    renderQuestion(currentIdx);
+  } else {
+    showResults();
+  }
+}
+
+/* ─── showResults() ─────────────────────────────────────────── */
+function showResults() {
+  hideAll();
+  quizResults.classList.add('active');
+
+  const tot = quizQuestions.length;
+  const pct = Math.round((correctCount / tot) * 100);
+
+  resultScoreBig.textContent  = `${correctCount}/${tot}`;
+  resultScoreLabel.textContent= `question${tot > 1 ? 's' : ''} answered correctly`;
+
+  // Donut animation
+  const circumference = 251.2;
+  const offset = circumference - (pct / 100) * circumference;
+  donutPct.textContent = pct + '%';
+  // Animate after paint
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      donutFill.style.strokeDashoffset = offset;
+      // Colour by score
+      if (pct >= 80) {
+        donutFill.style.stroke = 'var(--green-50)';
+      } else if (pct >= 50) {
+        donutFill.style.stroke = 'var(--blue-50)';
+      } else {
+        donutFill.style.stroke = 'var(--red-50)';
+      }
+    });
+  });
+
+  // Message
+  let msg, sub;
+  if (pct === 100)     { msg = '🏆 Perfect Score!';        sub = 'Exceptional work — you aced every question.'; }
+  else if (pct >= 80)  { msg = '🎉 Outstanding!';          sub = 'You have a strong grasp of the material.'; }
+  else if (pct >= 60)  { msg = '👍 Good Effort!';          sub = 'Solid understanding — a little more practice will help.'; }
+  else if (pct >= 40)  { msg = '📚 Keep Studying!';        sub = 'Review the explanations and try again.'; }
+  else                 { msg = '💪 Don\'t Give Up!';       sub = 'Every attempt builds your understanding.'; }
+  resultMessage.textContent = msg;
+  resultSub.textContent     = sub;
+
+  // Final progress bar
+  progressFill.style.width = '100%';
+  progressBar.setAttribute('aria-valuenow', 100);
+  progressLabel.textContent = `Complete — ${tot} of ${tot}`;
+  progressScore.textContent = `${correctCount} correct`;
+
+  // Per-question review
+  reviewList.innerHTML = '';
+  quizQuestions.forEach((q, i) => {
+    const ua      = userAnswers[i];
+    const pass    = ua === q.correct;
+    const item    = document.createElement('div');
+    item.className = 'review-item';
+    const yourTxt = ua !== null ? q.opts[ua] : 'Not answered';
+    const cls     = pass ? 'correct-ans' : 'wrong';
+    item.innerHTML = `
+      <div class="review-item__num ${pass ? 'pass' : 'fail'}">${i + 1}</div>
+      <div>
+        <div class="review-item__q">${escHtml(q.q)}</div>
+        <div class="review-item__ans">
+          Your answer: <span class="your-ans ${cls}">${escHtml(yourTxt)}</span><br>
+          ${!pass ? `Correct: <span style="color:var(--green-50);font-weight:600;">${escHtml(q.opts[q.correct])}</span>` : ''}
+        </div>
+      </div>
+      <i class="review-item__icon fa-solid ${pass ? 'fa-circle-check pass' : 'fa-circle-xmark fail'}"></i>
+    `;
+    reviewList.appendChild(item);
+  });
+}
+
+/* ─── restartQuiz() ──────────────────────────────────────────── */
+function restartQuiz() {
+  hideAll();
+  emptyState.style.display = '';
+  donutFill.style.strokeDashoffset = '251.2';
+}
+
+/* ─── shareScore() ───────────────────────────────────────────── */
+function shareScore() {
+  const tot = quizQuestions.length;
+  const pct = Math.round((correctCount / tot) * 100);
+  const diff = document.querySelector('input[name="difficulty"]:checked')?.value || 'Medium';
+  const text = `I scored ${correctCount}/${tot} (${pct}%) on a ${quizSubjectName} quiz (${diff}) — Smart Study Generator · IBM Granite AI`;
+  navigator.clipboard.writeText(text)
+    .then(() => showToast('Score copied to clipboard!', 'success'))
+    .catch(() => showToast('Could not copy. Please try manually.', 'error'));
+}
+
+/* ─── hideAll() ──────────────────────────────────────────────── */
+function hideAll() {
+  emptyState.style.display    = 'none';
+  generatingEl.classList.remove('active');
+  quizArea.classList.remove('active');
+  quizResults.classList.remove('active');
+}
+
+/* ─── Helper ─────────────────────────────────────────────────── */
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─── Event listeners ────────────────────────────────────────── */
+answerOptions.querySelectorAll('.answer-btn').forEach(btn => {
+  btn.addEventListener('click', () => selectAnswer(parseInt(btn.dataset.idx, 10)));
+});
+nextBtn.addEventListener('click', nextQuestion);
+document.getElementById('restartQuizBtn').addEventListener('click', restartQuiz);
+document.getElementById('shareScoreBtn').addEventListener('click', shareScore);
+
+/* ─── Keyboard support ───────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  // Enter on generate button
+  if (e.key === 'Enter' && document.activeElement.id === 'generateQuizBtn') {
+    generateQuiz();
+    return;
+  }
+  // Number keys 1-4: select answer
+  if (['1','2','3','4'].includes(e.key) && quizArea.classList.contains('active') && !answered) {
+    const idx = parseInt(e.key, 10) - 1;
+    const btns = answerOptions.querySelectorAll('.answer-btn');
+    if (btns[idx] && !btns[idx].disabled) selectAnswer(idx);
+    return;
+  }
+  // Enter to advance
+  if (e.key === 'Enter' && nextBtn.classList.contains('show') && answered) {
+    nextQuestion();
+  }
+});
+</script>
+</body>
+</html>

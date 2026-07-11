@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="description" content="AI Study Planner — generate a personalised day-by-day revision schedule powered by IBM Granite AI."/>
+  <meta name="theme-color" content="#0f62fe"/>
+  <title>Study Planner | Smart Study Generator Agent</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+  <link rel="stylesheet" href="../css/global.css"/>
+  <style>
+    .page-hero{padding:calc(var(--nav-h)+var(--sp-16)) 0 var(--sp-12)}
+    .planner-body{background:var(--color-surface);padding:var(--sp-12) 0 var(--sp-24)}
+    .planner-layout{display:grid;grid-template-columns:400px 1fr;gap:var(--sp-8);align-items:start}
+    /* Form */
+    .planner-form{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-2xl);
+      padding:var(--sp-8);box-shadow:var(--shadow-card);position:sticky;top:calc(var(--nav-h)+var(--sp-6))}
+    .pf-head{display:flex;align-items:center;gap:var(--sp-4);padding-bottom:var(--sp-6);border-bottom:1px solid var(--color-border);margin-bottom:var(--sp-6)}
+    .pf-icon{width:54px;height:54px;background:linear-gradient(135deg,var(--blue-10),#dde8ff);border:1px solid var(--blue-20);
+      border-radius:var(--radius-xl);display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;box-shadow:0 2px 10px rgba(15,98,254,.12)}
+    .pf-title{font-size:1.0625rem;font-weight:700;color:var(--color-text)}
+    .pf-sub{font-size:.8125rem;color:var(--color-text-muted);margin-top:2px}
+    /* Range */
+    .range-wrap{position:relative}
+    .form-range{width:100%;height:5px;-webkit-appearance:none;appearance:none;
+      background:var(--blue-20);border-radius:var(--radius-full);outline:none;cursor:pointer}
+    .form-range::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+      background:linear-gradient(135deg,var(--blue-50),var(--blue-60));border:2px solid var(--white);
+      box-shadow:var(--shadow-blue-sm);cursor:pointer;transition:transform var(--ease-bounce),box-shadow var(--ease)}
+    .form-range::-webkit-slider-thumb:hover{transform:scale(1.2);box-shadow:var(--shadow-blue)}
+    .range-val{display:inline-flex;align-items:center;padding:2px 10px;background:var(--blue-10);
+      color:var(--blue-60);border-radius:var(--radius-full);font-size:.8125rem;font-weight:700;font-family:var(--font-mono);margin-left:auto}
+    .range-labels{display:flex;justify-content:space-between;font-size:.72rem;color:var(--gray-40);padding:0 2px;margin-top:4px}
+    /* Intensity */
+    .intensity-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-2)}
+    .intensity-opt input{position:absolute;opacity:0;width:0;height:0}
+    .intensity-opt .io-inner{display:flex;flex-direction:column;align-items:center;gap:4px;padding:var(--sp-3) var(--sp-2);
+      background:var(--color-surface);border:1.5px solid var(--color-border);border-radius:var(--radius-lg);
+      font-size:.8125rem;font-weight:600;color:var(--color-text-muted);cursor:pointer;
+      transition:border-color var(--ease),background var(--ease),color var(--ease),box-shadow var(--ease-bounce)}
+    .intensity-opt .io-emoji{font-size:1.4rem}
+    .intensity-opt input:checked+.io-inner{border-color:var(--blue-40);background:var(--blue-10);color:var(--blue-60);box-shadow:0 0 0 3px rgba(15,98,254,.1)}
+    .intensity-opt:hover .io-inner{border-color:var(--blue-30);background:var(--blue-10)}
+    /* Tag input */
+    .tag-wrap{display:flex;flex-wrap:wrap;gap:var(--sp-2);align-items:center;
+      background:var(--color-surface);border:1.5px solid var(--color-border);border-radius:var(--radius-lg);
+      padding:var(--sp-2) var(--sp-3);min-height:52px;cursor:text;
+      transition:border-color var(--ease),box-shadow var(--ease)}
+    .tag-wrap:focus-within{border-color:var(--blue-40);box-shadow:0 0 0 3px rgba(15,98,254,.1);background:var(--color-bg)}
+    .topic-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px 3px 12px;
+      border-radius:var(--radius-full);font-size:.8125rem;font-weight:600;
+      background:linear-gradient(135deg,var(--blue-10),#dde8ff);color:var(--blue-60);border:1px solid var(--blue-20);
+      animation:tag-in .25s var(--ease-bounce)}
+    .topic-tag--weak{background:linear-gradient(135deg,#fff1f1,#ffe8e8);color:#a2191f;border-color:#ffd7d9}
+    @keyframes tag-in{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+    .tag-remove{background:none;border:none;cursor:pointer;font-size:.75rem;color:inherit;
+      opacity:.6;transition:opacity var(--ease),transform var(--ease-bounce);padding:0;line-height:1}
+    .tag-remove:hover{opacity:1;transform:scale(1.2)}
+    .tag-input{flex:1;min-width:120px;border:none;outline:none;background:transparent;
+      font-family:var(--font);font-size:.875rem;color:var(--color-text);padding:var(--sp-1) 0}
+    .tag-input::placeholder{color:var(--gray-40)}
+    /* Checkboxes */
+    .pref-list{display:flex;flex-direction:column;gap:var(--sp-2)}
+    .pref-item{display:flex;align-items:center;gap:var(--sp-3);font-size:.875rem;font-weight:500;color:var(--color-text);cursor:pointer}
+    .pref-item input{position:absolute;opacity:0;width:0;height:0}
+    .pref-box{width:18px;height:18px;border:2px solid var(--color-border-strong);border-radius:4px;
+      background:var(--color-surface);flex-shrink:0;display:flex;align-items:center;justify-content:center;
+      transition:background var(--ease),border-color var(--ease)}
+    .pref-item input:checked~.pref-box{background:linear-gradient(135deg,var(--blue-50),var(--blue-60));border-color:var(--blue-50)}
+    .pref-item input:checked~.pref-box::after{content:'';width:5px;height:9px;border:2px solid #fff;
+      border-top:none;border-left:none;transform:rotate(45deg) translate(-1px,-1px);display:block}
+    .reset-link{background:none;border:none;cursor:pointer;font-size:.8125rem;color:var(--color-text-muted);
+      text-align:center;transition:color var(--ease);font-family:var(--font)}
+    .reset-link:hover{color:var(--color-primary)}
+    /* Empty state */
+    .planner-empty{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl);
+      padding:var(--sp-20) var(--sp-8);text-align:center;box-shadow:var(--shadow-card)}
+    .pe-icon{font-size:4rem;display:block;margin-bottom:var(--sp-5);animation:float 3.5s ease-in-out infinite}
+    .pe-title{font-size:1.375rem;font-weight:700;color:var(--color-text);margin-bottom:var(--sp-3);letter-spacing:-.3px}
+    .pe-sub{font-size:.9375rem;color:var(--color-text-muted);max-width:360px;margin:0 auto var(--sp-8);line-height:1.7}
+    .pe-features{display:flex;justify-content:center;gap:var(--sp-4);flex-wrap:wrap}
+    .pe-feat{display:flex;align-items:center;gap:var(--sp-2);font-size:.875rem;font-weight:600;color:var(--color-text-muted);
+      background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-full);padding:var(--sp-2) var(--sp-4)}
+    /* Result */
+    .planner-result{display:flex;flex-direction:column;gap:var(--sp-5);animation:fade-up .5s var(--ease) both}
+    .result-header{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl);
+      padding:var(--sp-5) var(--sp-6);display:flex;align-items:center;justify-content:space-between;
+      gap:var(--sp-4);flex-wrap:wrap;box-shadow:var(--shadow-card)}
+    .rh-title{font-size:1.125rem;font-weight:700;color:var(--color-text)}
+    .rh-meta{font-size:.8125rem;color:var(--color-text-muted);margin-top:2px}
+    .rh-actions{display:flex;gap:var(--sp-2);flex-wrap:wrap}
+    .rab{display:inline-flex;align-items:center;gap:var(--sp-2);padding:7px 14px;border-radius:var(--radius-full);
+      font-size:.8125rem;font-weight:600;border:1px solid var(--color-border);background:var(--color-bg);
+      color:var(--color-text-muted);cursor:pointer;transition:background var(--ease),color var(--ease),transform var(--ease-bounce)}
+    .rab:hover{background:var(--color-surface);color:var(--color-text);transform:translateY(-1px)}
+    .rab--primary{background:linear-gradient(135deg,var(--blue-50),var(--blue-60));color:#fff;border-color:transparent;box-shadow:var(--shadow-blue-sm)}
+    .rab--primary:hover{box-shadow:var(--shadow-blue);color:#fff}
+    /* Summary cards */
+    .summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-3)}
+    .sum-card{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl);
+      padding:var(--sp-5) var(--sp-4);text-align:center;box-shadow:var(--shadow-card);
+      transition:transform var(--ease),box-shadow var(--ease)}
+    .sum-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+    .sum-icon{font-size:1.375rem;display:block;margin-bottom:var(--sp-2)}
+    .sum-val{font-size:1.75rem;font-weight:700;line-height:1;background:linear-gradient(135deg,var(--blue-60),var(--blue-40));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .sum-lbl{font-size:.75rem;font-weight:500;color:var(--color-text-muted);margin-top:var(--sp-1)}
+    /* Alert */
+    .weak-alert{background:linear-gradient(135deg,#fff8e1,#fff3cd);border:1px solid #f1c21b;
+      border-radius:var(--radius-xl);padding:var(--sp-4) var(--sp-5);display:flex;align-items:flex-start;gap:var(--sp-4)}
+    .wa-icon{font-size:1.5rem;flex-shrink:0}
+    .wa-title{font-size:.9rem;font-weight:700;color:#7a4f00;margin-bottom:2px}
+    .wa-text{font-size:.875rem;color:#5c3900;line-height:1.6}
+    /* Tabs */
+    .result-tabs{display:flex;gap:4px;background:var(--color-bg);border:1px solid var(--color-border);
+      border-radius:var(--radius-xl);padding:5px;box-shadow:var(--shadow-card)}
+    .rtab{flex:1;padding:var(--sp-3);border-radius:var(--radius-lg);font-size:.8125rem;font-weight:600;
+      color:var(--color-text-muted);background:none;border:none;cursor:pointer;
+      transition:background var(--ease),color var(--ease),box-shadow var(--ease)}
+    .rtab:hover{color:var(--color-primary);background:var(--blue-10)}
+    .rtab.active{background:linear-gradient(135deg,var(--blue-50),var(--blue-60));color:#fff;box-shadow:var(--shadow-blue-sm)}
+    /* Panels */
+    .result-panel{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-xl);
+      padding:var(--sp-6);box-shadow:var(--shadow-card);animation:fade-up .35s var(--ease) both}
+    /* Day cards */
+    .timetable{display:flex;flex-direction:column;gap:var(--sp-3)}
+    .day-card{border:1px solid var(--color-border);border-radius:var(--radius-lg);overflow:hidden;
+      transition:box-shadow var(--ease),transform var(--ease)}
+    .day-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+    .dc-head{display:flex;align-items:center;justify-content:space-between;padding:var(--sp-3) var(--sp-5);
+      cursor:pointer;transition:background var(--ease)}
+    .dc-today .dc-head{background:linear-gradient(135deg,var(--blue-10),#dde8ff)}
+    .dc-exam .dc-head{background:linear-gradient(135deg,#fff1f1,#ffe8e8)}
+    .dc-rest .dc-head{background:var(--gray-10)}
+    .dc-future .dc-head{background:var(--color-bg)}
+    .dc-date{display:flex;align-items:center;gap:var(--sp-3)}
+    .dc-circle{width:42px;height:42px;border-radius:50%;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;background:var(--color-bg);border:1.5px solid var(--color-border);flex-shrink:0}
+    .dc-today .dc-circle{background:var(--blue-50);border-color:var(--blue-50);color:#fff}
+    .dc-exam .dc-circle{background:#da1e28;border-color:#da1e28;color:#fff}
+    .dc-num{font-size:1rem;font-weight:700;line-height:1}
+    .dc-mon{font-size:.6rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;opacity:.7}
+    .dc-dayname{font-size:.9rem;font-weight:700;color:var(--color-text)}
+    .dc-today .dc-dayname{color:var(--blue-60)}
+    .dc-exam .dc-dayname{color:#a2191f}
+    .dc-meta{font-size:.75rem;color:var(--color-text-muted);margin-top:1px}
+    .dc-badge{font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:var(--radius-full)}
+    .dcb-study{background:var(--blue-10);color:var(--blue-60)}
+    .dcb-today{background:var(--blue-50);color:#fff}
+    .dcb-rest{background:var(--gray-10);color:var(--gray-60)}
+    .dcb-exam{background:#fff1f1;color:#a2191f}
+    .dcb-rev{background:#defbe6;color:#0e6027}
+    .dc-chev{color:var(--color-text-muted);transition:transform var(--ease);font-size:.75rem}
+    .day-card.open .dc-chev{transform:rotate(180deg)}
+    .dc-body{display:none;flex-direction:column;gap:2px;padding:var(--sp-2) var(--sp-4) var(--sp-4);
+      background:var(--color-bg);border-top:1px solid var(--color-border)}
+    .day-card.open .dc-body{display:flex}
+    .session-row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3);
+      border-radius:var(--radius-md);transition:background var(--ease)}
+    .session-row:hover{background:var(--color-surface)}
+    .sr-time{font-size:.75rem;font-family:var(--font-mono);color:var(--color-text-muted);white-space:nowrap;min-width:90px}
+    .sr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .sr-topic{font-size:.875rem;font-weight:600;color:var(--color-text);flex:1}
+    .sr-type{font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:var(--radius-full)}
+    .srt-study{background:var(--blue-10);color:var(--blue-60)}
+    .srt-break{background:var(--gray-10);color:var(--gray-60)}
+    .srt-revision{background:#defbe6;color:#0e6027}
+    .srt-mock{background:#fff1f1;color:#a2191f}
+    .srt-weak{background:#fff8e1;color:#7a4f00}
+    /* Schedule table */
+    .sch-table{width:100%;border-collapse:collapse;font-size:.875rem}
+    .sch-table th{text-align:left;padding:var(--sp-3) var(--sp-4);font-size:.72rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:.8px;color:var(--color-text-muted);
+      border-bottom:2px solid var(--color-border);background:var(--color-surface);white-space:nowrap}
+    .sch-table td{padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--color-border);
+      color:var(--color-text);vertical-align:middle}
+    .sch-table tr:last-child td{border-bottom:none}
+    .sch-table tr:hover td{background:var(--blue-10)}
+    .prog-cell{display:flex;align-items:center;gap:var(--sp-3)}
+    .prog-mini{flex:1;height:5px;background:var(--gray-20);border-radius:var(--radius-full);overflow:hidden}
+    .prog-fill{height:100%;border-radius:var(--radius-full);background:linear-gradient(90deg,var(--blue-50),var(--blue-30));transition:width 1s var(--ease)}
+    .prog-fill--weak{background:linear-gradient(90deg,#f1c21b,#ff8389)}
+    .prog-pct{font-size:.72rem;font-weight:700;color:var(--color-primary);font-family:var(--font-mono);white-space:nowrap}
+    .pri-badge{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:700;padding:2px 9px;border-radius:var(--radius-full)}
+    .pri-high{background:#fff1f1;color:#a2191f}
+    .pri-med{background:#fff8e1;color:#7a4f00}
+    .pri-low{background:#defbe6;color:#0e6027}
+    .weak-tag{font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:var(--radius-full);
+      background:linear-gradient(135deg,#f1c21b,#ffd63a);color:#5c3900}
+    /* Topic breakdown */
+    .topic-list{display:flex;flex-direction:column;gap:var(--sp-4)}
+    .topic-row{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);
+      padding:var(--sp-4) var(--sp-5);display:flex;align-items:center;gap:var(--sp-5);
+      transition:box-shadow var(--ease),transform var(--ease)}
+    .topic-row:hover{box-shadow:var(--shadow-sm);transform:translateX(3px)}
+    .topic-row--weak{border-color:#f1c21b;background:linear-gradient(135deg,#fff8e1,#fff3cd)}
+    .tr-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--blue-50),var(--blue-40));
+      color:#fff;font-size:.8rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .topic-row--weak .tr-num{background:linear-gradient(135deg,#f1c21b,#ff8389)}
+    .tr-info{flex:1;min-width:0}
+    .tr-name{font-size:.9375rem;font-weight:700;color:var(--color-text)}
+    .tr-meta{font-size:.78rem;color:var(--color-text-muted);margin-top:2px}
+    .tr-right{display:flex;align-items:center;gap:var(--sp-3);flex-shrink:0}
+    @media(max-width:1100px){.planner-layout{grid-template-columns:340px 1fr}}
+    @media(max-width:900px){.planner-layout{grid-template-columns:1fr}.planner-form{position:static}.summary-row{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:640px){.result-tabs{flex-direction:column}.result-header{flex-direction:column;align-items:flex-start}.summary-row{grid-template-columns:repeat(2,1fr)}}
+    @media print{.nav,.page-hero,.planner-form,.rh-actions,.result-tabs,footer{display:none!important}.planner-layout{display:block}.day-card.open .dc-body,.result-panel[hidden]{display:flex!important}}
+  </style>
+</head>
+<body>
+<header id="nav" class="nav" role="banner">
+  <div class="container nav__inner">
+    <a href="../index.html" class="nav__logo"><span class="nav__logo-badge">IBM</span><span class="nav__logo-text">Smart Study Generator</span></a>
+    <nav class="nav__links">
+      <a href="../index.html" class="nav__link">Home</a>
+      <a href="upload.html" class="nav__link">Upload Notes</a>
+      <a href="chat.html" class="nav__link">AI Chat</a>
+      <a href="quiz.html" class="nav__link">Quiz</a>
+      <a href="flashcards.html" class="nav__link">Flashcards</a>
+      <a href="planner.html" class="nav__link active">Study Planner</a>
+      <a href="dashboard.html" class="nav__link">Dashboard</a>
+      <a href="about.html" class="nav__link">About</a>
+      <a href="contact.html" class="nav__link">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <button class="nav__theme-btn" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <a href="dashboard.html" class="btn btn-primary btn-sm">Dashboard</a>
+    </div>
+    <button class="nav__toggle" id="navToggle" aria-expanded="false">
+      <span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span>
+    </button>
+  </div>
+  <nav class="nav__mobile" id="navMobile">
+    <a href="../index.html" class="nav__link">Home</a>
+    <a href="upload.html" class="nav__link">Upload Notes</a>
+    <a href="chat.html" class="nav__link">AI Chat</a>
+    <a href="quiz.html" class="nav__link">Quiz</a>
+    <a href="flashcards.html" class="nav__link">Flashcards</a>
+    <a href="planner.html" class="nav__link active">Study Planner</a>
+    <a href="dashboard.html" class="nav__link">Dashboard</a>
+    <a href="about.html" class="nav__link">About</a>
+    <a href="contact.html" class="nav__link">Contact</a>
+    <a href="dashboard.html" class="btn btn-primary" style="margin-top:.5rem;justify-content:center;">Dashboard</a>
+  </nav>
+</header>
+
+<section class="page-hero">
+  <div class="page-hero__bg" aria-hidden="true"></div>
+  <div class="container page-hero__inner">
+    <div class="page-hero-badge" data-reveal><span class="page-hero-badge__dot"></span>AI Study Planner — IBM Granite AI</div>
+    <h1 class="page-hero__title" data-reveal data-reveal-delay="1">Your Personalised<br><span class="page-hero__accent">Revision Schedule</span></h1>
+    <p class="page-hero__sub" data-reveal data-reveal-delay="2">Enter your exam details and available hours. IBM Granite AI builds a smart day-by-day timetable, prioritises weak topics, and keeps you on track.</p>
+  </div>
+</section>
+
+<section class="planner-body">
+  <div class="container planner-layout">
+
+    <!-- Form -->
+    <aside class="planner-form" data-reveal>
+      <div class="pf-head">
+        <div class="pf-icon">📅</div>
+        <div><div class="pf-title">Plan Details</div><div class="pf-sub">Fill in the fields and generate your plan</div></div>
+      </div>
+
+      <form id="plannerForm" novalidate autocomplete="off" style="display:flex;flex-direction:column;gap:var(--sp-5)">
+        <!-- Subject -->
+        <div class="form-group">
+          <label class="form-label" for="pSubject"><i class="fa-solid fa-book" style="color:var(--color-primary)"></i> Subject / Course</label>
+          <input type="text" id="pSubject" class="form-input" placeholder="e.g. Machine Learning, Organic Chemistry" maxlength="80" required/>
+          <span class="form-error" id="pSubjectErr"></span>
+        </div>
+
+        <!-- Exam date -->
+        <div class="form-group">
+          <label class="form-label" for="pDate"><i class="fa-solid fa-calendar" style="color:var(--color-primary)"></i> Exam Date</label>
+          <input type="date" id="pDate" class="form-input" required/>
+          <span class="form-error" id="pDateErr"></span>
+        </div>
+
+        <!-- Hours -->
+        <div class="form-group">
+          <label class="form-label" for="pHours">
+            <i class="fa-regular fa-clock" style="color:var(--color-primary)"></i> Hours Available per Day
+            <span class="range-val" id="hoursVal">3 hrs</span>
+          </label>
+          <input type="range" id="pHours" class="form-range" min="1" max="12" value="3" step="0.5"/>
+          <div class="range-labels"><span>1 hr</span><span>6 hrs</span><span>12 hrs</span></div>
+        </div>
+
+        <!-- Intensity -->
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-fire" style="color:var(--color-primary)"></i> Study Intensity</label>
+          <div class="intensity-grid">
+            <label class="intensity-opt"><input type="radio" name="intensity" value="relaxed"/><div class="io-inner"><span class="io-emoji">🚗</span><span>Relaxed</span></div></label>
+            <label class="intensity-opt"><input type="radio" name="intensity" value="moderate" checked/><div class="io-inner"><span class="io-emoji">⚡</span><span>Moderate</span></div></label>
+            <label class="intensity-opt"><input type="radio" name="intensity" value="intensive"/><div class="io-inner"><span class="io-emoji">🔥</span><span>Intensive</span></div></label>
+          </div>
+        </div>
+
+        <!-- Topics -->
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-list" style="color:var(--color-primary)"></i> Topics <span style="font-size:.72rem;color:var(--color-text-muted);font-weight:400">(Enter or comma to add)</span></label>
+          <div class="tag-wrap" id="topicWrap">
+            <div id="topicTags"></div>
+            <input type="text" class="tag-input" id="topicInput" placeholder="Add a topic…" maxlength="60" autocomplete="off"/>
+          </div>
+          <span class="form-error" id="topicsErr"></span>
+        </div>
+
+        <!-- Weak topics -->
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-triangle-exclamation" style="color:#f1c21b"></i> Weak / Priority Topics <span style="font-size:.72rem;color:var(--color-text-muted);font-weight:400">(Enter or comma)</span></label>
+          <div class="tag-wrap" id="weakWrap">
+            <div id="weakTags"></div>
+            <input type="text" class="tag-input" id="weakInput" placeholder="Add a weak topic…" maxlength="60" autocomplete="off"/>
+          </div>
+        </div>
+
+        <!-- Preferences -->
+        <div class="form-group">
+          <label class="form-label"><i class="fa-solid fa-sliders" style="color:var(--color-primary)"></i> Preferences</label>
+          <div class="pref-list">
+            <label class="pref-item"><input type="checkbox" id="pBreaks" checked><div style="display:contents"><span class="pref-box"></span><span>Include Pomodoro breaks</span></div></label>
+            <label class="pref-item"><input type="checkbox" id="pRevision" checked><div style="display:contents"><span class="pref-box"></span><span>Add revision sessions</span></div></label>
+            <label class="pref-item"><input type="checkbox" id="pMock"><div style="display:contents"><span class="pref-box"></span><span>Include mock exam day</span></div></label>
+            <label class="pref-item"><input type="checkbox" id="pWeekends"><div style="display:contents"><span class="pref-box"></span><span>Study on weekends</span></div></label>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg" id="genBtn" style="width:100%;justify-content:center">
+          <span id="genLabel"><i class="fa-solid fa-bolt"></i> Generate My Study Plan</span>
+          <span id="genLoad" hidden><span class="spinner"></span> Generating…</span>
+        </button>
+        <button type="button" class="reset-link" id="resetBtn">Reset form</button>
+      </form>
+    </aside>
+
+    <!-- Output -->
+    <div>
+      <div class="planner-empty" id="plannerEmpty" data-reveal data-reveal-delay="1">
+        <span class="pe-icon">📅</span>
+        <h3 class="pe-title">Your plan will appear here</h3>
+        <p class="pe-sub">Fill in the form and click <strong>Generate</strong> to get your personalised IBM Granite AI study schedule.</p>
+        <div class="pe-features">
+          <div class="pe-feat">📅 Daily timetable</div>
+          <div class="pe-feat">📋 Revision schedule</div>
+          <div class="pe-feat">🎯 Weak topic reminders</div>
+        </div>
+      </div>
+
+      <div class="planner-result" id="plannerResult" hidden>
+        <div class="result-header">
+          <div><div class="rh-title" id="rhTitle">Study Plan</div><div class="rh-meta" id="rhMeta"></div></div>
+          <div class="rh-actions">
+            <button class="rab" id="printBtn"><i class="fa-solid fa-print"></i> Print</button>
+            <button class="rab" id="csvBtn"><i class="fa-solid fa-download"></i> Export CSV</button>
+            <button class="rab rab--primary" id="regenBtn"><i class="fa-solid fa-rotate"></i> Regenerate</button>
+          </div>
+        </div>
+        <div class="summary-row" id="summaryRow"></div>
+        <div class="weak-alert" id="weakAlert" hidden>
+          <div class="wa-icon">🎯</div>
+          <div><strong class="wa-title">Priority Reminder</strong><p class="wa-text" id="weakAlertText"></p></div>
+        </div>
+        <div class="result-tabs">
+          <button class="rtab active" data-tab="timetable">📅 Daily Timetable</button>
+          <button class="rtab" data-tab="schedule">📋 Revision Schedule</button>
+          <button class="rtab" data-tab="topics">🎯 Topic Breakdown</button>
+        </div>
+        <div class="result-panel" id="panel-timetable"></div>
+        <div class="result-panel" id="panel-schedule" hidden></div>
+        <div class="result-panel" id="panel-topics" hidden></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer__grid">
+      <div><div class="footer__brand-logo"><span class="footer__ibm-badge">IBM</span><span class="footer__brand-name">Smart Study Generator</span></div><p class="footer__brand-desc">Built on IBM Granite AI and watsonx.ai for IBM University Engagement.</p></div>
+      <div><div class="footer__col-title">Features</div><ul class="footer__col-links"><li><a href="upload.html">Upload Notes</a></li><li><a href="chat.html">AI Chat</a></li><li><a href="quiz.html">Quiz Generator</a></li><li><a href="flashcards.html">Flashcards</a></li><li><a href="planner.html">Study Planner</a></li><li><a href="dashboard.html">Dashboard</a></li></ul></div>
+      <div><div class="footer__col-title">Technology</div><ul class="footer__col-links"><li><a href="https://www.ibm.com/granite" target="_blank" rel="noopener">IBM Granite</a></li><li><a href="https://www.ibm.com/watsonx" target="_blank" rel="noopener">watsonx.ai</a></li><li><a href="https://cloud.ibm.com" target="_blank" rel="noopener">IBM Cloud</a></li></ul></div>
+      <div><div class="footer__col-title">Project</div><ul class="footer__col-links"><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="https://ibm.com/university" target="_blank" rel="noopener">IBM University</a></li></ul></div>
+    </div>
+    <div class="footer__bottom"><p class="footer__copy">© 2025 Smart Study Generator Agent — <a href="https://ibm.com/university" target="_blank" rel="noopener">IBM University Engagement Project</a></p><nav class="footer__legal"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Accessibility</a></nav></div>
+  </div>
+</footer>
+
+<script src="../js/app.js" defer></script>
+<script>
+(function(){
+'use strict';
+const state={topics:[],weak:[]};
+
+// Set min date to today
+document.getElementById('pDate').min=new Date().toISOString().split('T')[0];
+
+// Range slider live update
+const rangeEl=document.getElementById('pHours'),hvEl=document.getElementById('hoursVal');
+function updateRange(){
+  const v=parseFloat(rangeEl.value);
+  hvEl.textContent=v%1===0?v+' hrs':v+' hrs';
+  const pct=((v-1)/(12-1))*100;
+  rangeEl.style.background=`linear-gradient(90deg,var(--blue-50) ${pct}%,var(--blue-20) ${pct}%)`;
+}
+rangeEl.addEventListener('input',updateRange);updateRange();
+
+// Tag inputs
+initTags('topicInput','topicTags',state.topics,false);
+initTags('weakInput','weakTags',state.weak,true);
+
+function initTags(inputId,containerId,arr,isWeak){
+  const input=document.getElementById(inputId),container=document.getElementById(containerId);
+  const wrap=input.parentElement;
+  wrap.addEventListener('click',()=>input.focus());
+  input.addEventListener('keydown',e=>{
+    if((e.key==='Enter'||e.key===',')&&input.value.trim()){
+      e.preventDefault();addTag(input.value.trim().replace(/,$/,''),arr,container,isWeak);input.value='';
+    }
+    if(e.key==='Backspace'&&input.value===''&&arr.length){arr.pop();renderTags(arr,container,isWeak)}
+  });
+}
+function addTag(text,arr,container,isWeak){
+  if(!text||arr.includes(text)||arr.length>=20) return;
+  arr.push(text);renderTags(arr,container,isWeak);
+}
+function renderTags(arr,container,isWeak){
+  container.innerHTML='';
+  arr.forEach((tag,i)=>{
+    const span=document.createElement('span');
+    span.className='topic-tag'+(isWeak?' topic-tag--weak':'');
+    span.innerHTML=esc(tag)+`<button class="tag-remove" aria-label="Remove ${esc(tag)}" data-i="${i}">&times;</button>`;
+    span.querySelector('.tag-remove').addEventListener('click',()=>{arr.splice(i,1);renderTags(arr,container,isWeak)});
+    container.appendChild(span);
+  });
+}
+
+// Form submit
+document.getElementById('plannerForm').addEventListener('submit',e=>{e.preventDefault();if(validate())generate()});
+document.getElementById('regenBtn').addEventListener('click',()=>{if(validate())generate()});
+document.getElementById('printBtn').addEventListener('click',()=>window.print());
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  if(!confirm('Reset the form? Your plan will be cleared.')) return;
+  document.getElementById('plannerForm').reset();
+  state.topics=[];state.weak=[];
+  ['topicTags','weakTags'].forEach(id=>document.getElementById(id).innerHTML='');
+  updateRange();
+  document.getElementById('plannerEmpty').hidden=false;
+  document.getElementById('plannerResult').hidden=true;
+  ['pSubjectErr','pDateErr','topicsErr'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='';el.classList.remove('show')}});
+});
+
+function validate(){
+  let ok=true;
+  const setErr=(id,msg)=>{const el=document.getElementById(id);if(el){el.textContent=msg;el.classList.toggle('show',!!msg)}};
+  const subject=document.getElementById('pSubject');
+  const date=document.getElementById('pDate');
+  subject.classList.remove('error');date.classList.remove('error');
+  if(!subject.value.trim()){setErr('pSubjectErr','Please enter a subject name.');subject.classList.add('error');ok=false}else setErr('pSubjectErr','');
+  if(!date.value){setErr('pDateErr','Please choose your exam date.');date.classList.add('error');ok=false}
+  else if(new Date(date.value)<=new Date()){setErr('pDateErr','Exam date must be in the future.');date.classList.add('error');ok=false}
+  else setErr('pDateErr','');
+  if(!state.topics.length){setErr('topicsErr','Add at least one topic to study.');ok=false}else setErr('topicsErr','');
+  return ok;
+}
+
+function generate(){
+  const genLabel=document.getElementById('genLabel'),genLoad=document.getElementById('genLoad');
+  const genBtn=document.getElementById('genBtn');
+  genLabel.hidden=true;genLoad.hidden=false;genBtn.disabled=true;
+  setTimeout(()=>{buildPlan();genLabel.hidden=false;genLoad.hidden=true;genBtn.disabled=false},1500+Math.random()*600);
+}
+
+function buildPlan(){
+  const subject=document.getElementById('pSubject').value.trim();
+  const examDate=new Date(document.getElementById('pDate').value);
+  const hoursPerDay=parseFloat(document.getElementById('pHours').value);
+  const intensity=document.querySelector('input[name="intensity"]:checked')?.value||'moderate';
+  const pBreaks=document.getElementById('pBreaks').checked;
+  const pRevision=document.getElementById('pRevision').checked;
+  const pMock=document.getElementById('pMock').checked;
+  const pWeekends=document.getElementById('pWeekends').checked;
+  const topics=[...state.topics],weak=[...state.weak];
+  const today=new Date();today.setHours(0,0,0,0);
+  const totalDays=Math.ceil((examDate-today)/86400000);
+  if(totalDays<1) return;
+
+  // Header
+  document.getElementById('plannerEmpty').hidden=true;
+  document.getElementById('plannerResult').hidden=false;
+  document.getElementById('rhTitle').textContent=subject+' — Study Plan';
+  document.getElementById('rhMeta').textContent=`${totalDays} days until exam · ${hoursPerDay} hrs/day · ${intensity} intensity`;
+
+  // Summary
+  const studyDays=pWeekends?totalDays-1:Math.ceil((totalDays-1)*5/7);
+  const totalHrs=(studyDays*hoursPerDay).toFixed(0);
+  document.getElementById('summaryRow').innerHTML=[
+    {icon:'📅',val:totalDays,lbl:'Days to Exam'},
+    {icon:'⏱',val:totalHrs+'h',lbl:'Total Study Hours'},
+    {icon:'📚',val:topics.length,lbl:'Topics Covered'},
+    {icon:'🎯',val:weak.length||0,lbl:'Priority Topics'},
+  ].map(c=>`<div class="sum-card"><span class="sum-icon">${c.icon}</span><div class="sum-val">${c.val}</div><div class="sum-lbl">${c.lbl}</div></div>`).join('');
+
+  // Weak alert
+  if(weak.length){
+    document.getElementById('weakAlert').hidden=false;
+    document.getElementById('weakAlertText').textContent=`You marked ${weak.join(', ')} as weak/priority. IBM Granite AI has scheduled extra revision sessions for these topics throughout your plan.`;
+  }else document.getElementById('weakAlert').hidden=true;
+
+  // Days
+  const days=buildDays({today,examDate,totalDays,topics,weak,hoursPerDay,intensity,pBreaks,pRevision,pMock,pWeekends});
+  renderTimetable(days);
+  renderSchedule(topics,weak,days);
+  renderTopics(topics,weak,days);
+  document.getElementById('plannerResult').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function buildDays({today,examDate,totalDays,topics,weak,hoursPerDay,intensity,pBreaks,pRevision,pMock,pWeekends}){
+  const mult={relaxed:.7,moderate:1,intensive:1.3}[intensity]||1;
+  const days=[];
+  let topicIdx=0;
+  for(let d=0;d<totalDays;d++){
+    const date=new Date(today);date.setDate(today.getDate()+d);
+    const isExam=d===totalDays-1,isMock=pMock&&d===totalDays-2&&totalDays>3;
+    const isWeekend=date.getDay()===0||date.getDay()===6,isRest=isWeekend&&!pWeekends&&!isExam,isToday=d===0;
+    if(isExam){days.push({date,type:'exam',sessions:[{time:'All day',topic:'🎓 EXAM DAY',type:'exam',color:'#da1e28'},{time:'Before exam',topic:'Light review only',type:'break',color:'#6f6f6f'}]});continue}
+    if(isRest){days.push({date,type:'rest',sessions:[{time:'Rest Day',topic:'Weekend — rest and recharge 🛋',type:'break',color:'#6f6f6f'}]});continue}
+    if(isMock){days.push({date,type:'future',sessions:[{time:'09:00–11:00',topic:'📋 Mock Exam Simulation',type:'mock',color:'#da1e28'},{time:'11:00–11:15',topic:'Short break',type:'break',color:'#6f6f6f'},{time:'11:15–12:00',topic:'📊 Review mock answers',type:'revision',color:'#198038'}]});continue}
+    const avail=hoursPerDay*60*mult,sessions=[];let mins=0;const startH=9;
+    const count=intensity==='intensive'?3:intensity==='relaxed'?1:2;
+    const topicsToday=[];
+    for(let i=0;i<count&&topicsToday.length<topics.length;i++){topicsToday.push(topics[topicIdx%topics.length]);topicIdx++}
+    if(weak.length&&d%2===0){const wt=weak[d%weak.length];if(!topicsToday.includes(wt))topicsToday.unshift(wt)}
+    topicsToday.forEach(topic=>{
+      if(mins>=avail) return;
+      const s=minToTime(startH*60+mins);mins+=50;const e=minToTime(startH*60+mins);
+      const isWeak=weak.includes(topic);
+      sessions.push({time:`${s}–${e}`,topic:(isWeak?'⚠ ':'')+topic,type:isWeak?'weak':'study',color:isWeak?'#f1c21b':'#0f62fe'});
+      if(pBreaks&&mins<avail){const bs=minToTime(startH*60+mins);mins+=10;const be=minToTime(startH*60+mins);sessions.push({time:`${bs}–${be}`,topic:'☕ Pomodoro break',type:'break',color:'#6f6f6f'})}
+    });
+    if(pRevision&&d%3===2&&mins+30<=avail){const rs=minToTime(startH*60+mins);mins+=30;const re=minToTime(startH*60+mins);sessions.push({time:`${rs}–${re}`,topic:'🔁 Revision — previous topics',type:'revision',color:'#198038'})}
+    days.push({date,type:isToday?'today':'future',sessions,topics:topicsToday});
+  }
+  return days;
+}
+
+function renderTimetable(days){
+  const today=new Date();today.setHours(0,0,0,0);
+  const panel=document.getElementById('panel-timetable');
+  const list=document.createElement('div');list.className='timetable';
+  days.forEach((day,idx)=>{
+    const isToday=day.date.getTime()===today.getTime();
+    const type=day.type==='exam'?'dc-exam':day.type==='rest'?'dc-rest':isToday?'dc-today':'dc-future';
+    const badge=day.type==='exam'?'<span class="dc-badge dcb-exam">📋 EXAM</span>':day.type==='rest'?'<span class="dc-badge dcb-rest">Rest</span>':isToday?'<span class="dc-badge dcb-today">Today</span>':`<span class="dc-badge dcb-study">${day.sessions.filter(s=>s.type!=='break').length} sessions</span>`;
+    const sessions=day.sessions.map(s=>`<div class="session-row"><span class="sr-time">${s.time}</span><span class="sr-dot" style="background:${s.color}"></span><span class="sr-topic">${esc(s.topic)}</span><span class="sr-type srt-${s.type}">${cap(s.type)}</span></div>`).join('');
+    const card=document.createElement('div');
+    card.className=`day-card ${type}${(isToday||idx===0)?' open':''}`;
+    card.innerHTML=`<div class="dc-head"><div class="dc-date"><div class="dc-circle"><span class="dc-num">${day.date.getDate()}</span><span class="dc-mon">${day.date.toLocaleDateString('en',{month:'short'})}</span></div><div><div class="dc-dayname">${day.date.toLocaleDateString('en',{weekday:'long'})}</div><div class="dc-meta">${day.date.toLocaleDateString('en',{day:'numeric',month:'long',year:'numeric'})}</div></div></div>${badge}<span class="dc-chev">▼</span></div><div class="dc-body">${sessions}</div>`;
+    card.querySelector('.dc-head').addEventListener('click',()=>card.classList.toggle('open'));
+    list.appendChild(card);
+  });
+  panel.innerHTML='';panel.appendChild(list);
+}
+
+function renderSchedule(topics,weak,days){
+  const studyDays=days.filter(d=>d.sessions.some(s=>s.type!=='break'));
+  const rows=topics.map((topic,i)=>{
+    const isWeak=weak.includes(topic);
+    const sc=studyDays.filter(d=>d.topics?.includes(topic)).length;
+    const hrs=(sc*50/60).toFixed(1);
+    const pct=Math.min(100,Math.round(sc/Math.max(studyDays.length,1)*100*3));
+    const pri=isWeak?'high':i<topics.length/3?'medium':'low';
+    return `<tr><td>${i+1}</td><td><strong>${esc(topic)}</strong>${isWeak?' <span class="weak-tag">⚠ Weak</span>':''}</td><td>${sc} sessions</td><td>${hrs} hrs</td><td><div class="prog-cell"><div class="prog-mini"><div class="prog-fill${isWeak?' prog-fill--weak':''}" style="width:${pct}%"></div></div><span class="prog-pct">${pct}%</span></div></td><td><span class="pri-badge pri-${pri}">${cap(pri)}</span></td></tr>`;
+  }).join('');
+  document.getElementById('panel-schedule').innerHTML=`<div style="overflow-x:auto"><table class="sch-table"><thead><tr><th>#</th><th>Topic</th><th>Sessions</th><th>Hours</th><th>Coverage</th><th>Priority</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function renderTopics(topics,weak,days){
+  const studyDays=days.filter(d=>d.sessions.some(s=>s.type!=='break'));
+  const items=topics.map((topic,i)=>{
+    const isWeak=weak.includes(topic);
+    const sc=studyDays.filter(d=>d.topics?.includes(topic)).length;
+    const hrs=(sc*50/60).toFixed(1);
+    const pct=Math.min(100,Math.round(sc/Math.max(studyDays.length,1)*100*3));
+    return `<div class="topic-row${isWeak?' topic-row--weak':''}"><div class="tr-num">${i+1}</div><div class="tr-info"><div class="tr-name">${esc(topic)}</div><div class="tr-meta">${sc} sessions · ${hrs} hrs allocated</div></div><div class="tr-right">${isWeak?'<span class="weak-tag">⚠ Priority</span>':''}<div class="prog-cell" style="min-width:120px"><div class="prog-mini"><div class="prog-fill${isWeak?' prog-fill--weak':''}" style="width:${pct}%"></div></div><span class="prog-pct">${pct}%</span></div></div></div>`;
+  }).join('');
+  document.getElementById('panel-topics').innerHTML=`<div class="topic-list">${items}</div>`;
+}
+
+// Tabs
+document.querySelectorAll('.rtab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.rtab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    ['timetable','schedule','topics'].forEach(id=>{document.getElementById('panel-'+id).hidden=true});
+    document.getElementById('panel-'+tab.dataset.tab).hidden=false;
+  });
+});
+
+// Export CSV
+document.getElementById('csvBtn').addEventListener('click',()=>{
+  const subject=document.getElementById('pSubject').value.trim()||'Study Plan';
+  const rows=[['Date','Day','Time','Topic','Type']];
+  document.querySelectorAll('.day-card').forEach(card=>{
+    const dateStr=card.querySelector('.dc-meta')?.textContent||'';
+    const dayName=card.querySelector('.dc-dayname')?.textContent||'';
+    card.querySelectorAll('.session-row').forEach(row=>{
+      rows.push([dateStr,dayName,row.querySelector('.sr-time')?.textContent||'',row.querySelector('.sr-topic')?.textContent||'',row.querySelector('.sr-type')?.textContent||'']);
+    });
+  });
+  const csv=rows.map(r=>r.map(c=>`"${c.replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=subject.replace(/\s+/g,'-')+'-plan.csv';a.click();
+});
+
+function minToTime(t){const h=Math.floor(t/60)%24,m=t%60;return`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`}
+function cap(s){return s?s[0].toUpperCase()+s.slice(1):''}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+})();
+</script>
+</body>
+</html>

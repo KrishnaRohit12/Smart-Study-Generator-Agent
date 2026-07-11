@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Dashboard — Track your study progress, quiz performance, and activity with IBM Granite AI." />
+  <meta name="theme-color" content="#0f62fe" />
+  <title>Dashboard | Smart Study Generator Agent</title>
+
+  <link rel="stylesheet" href="../css/global.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+
+  <style>
+  /* ── Dashboard Layout ──────────────────────────────────────── */
+  .dash-page {
+    padding-top: var(--nav-h);
+    background: var(--color-surface);
+    min-height: 100vh;
+  }
+
+  /* ── Welcome Bar ────────────────────────────────────────────── */
+  .dash-welcome {
+    background: linear-gradient(140deg, #ffffff 0%, #eef4ff 55%, #e4eeff 100%);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--sp-6) 0;
+  }
+  [data-theme="dark"] .dash-welcome {
+    background: linear-gradient(140deg, #111827 0%, #161d35 55%, #192040 100%);
+  }
+  .dash-welcome__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    flex-wrap: wrap;
+  }
+  .dash-welcome__left h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 2px;
+    letter-spacing: -.4px;
+  }
+  .dash-welcome__left p {
+    font-size: .9rem;
+    color: var(--color-text-muted);
+  }
+  .dash-welcome__right {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    flex-wrap: wrap;
+  }
+  .dash-last-active {
+    font-size: .8125rem;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .dash-last-active i { color: var(--blue-40); }
+  .dash-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #defbe6;
+    border: 1px solid #a7f0ba;
+    color: #0e6027;
+    border-radius: var(--radius-full);
+    padding: 5px 14px;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .3px;
+  }
+  [data-theme="dark"] .dash-status-badge {
+    background: rgba(14, 96, 39, .25);
+    border-color: rgba(25, 128, 56, .4);
+    color: #42be65;
+  }
+  .dash-status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #198038;
+    box-shadow: 0 0 0 3px rgba(25,128,56,.25);
+    animation: pulse-green 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse-green {
+    0%,100% { box-shadow: 0 0 0 3px rgba(25,128,56,.25); }
+    50% { box-shadow: 0 0 0 6px rgba(25,128,56,.08); }
+  }
+
+  /* ── Main content area ──────────────────────────────────────── */
+  .dash-content {
+    padding: var(--sp-8) 0 var(--sp-16);
+  }
+
+  /* ── Stat Cards ──────────────────────────────────────────────── */
+  .dash-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-5);
+    margin-bottom: var(--sp-8);
+  }
+  .stat-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-6) var(--sp-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    transition: transform var(--ease-out), box-shadow var(--ease-out), border-color var(--ease);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card:hover { border-color: var(--color-border-strong); }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  }
+  .stat-card--blue::before { background: linear-gradient(90deg, var(--blue-50), var(--blue-30)); }
+  .stat-card--purple::before { background: linear-gradient(90deg, var(--violet), #a56eff); }
+  .stat-card--green::before { background: linear-gradient(90deg, var(--green-50), #42be65); }
+  .stat-card--orange::before { background: linear-gradient(90deg, #ff832b, #f1c21b); }
+  .stat-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+  .stat-card__top { display: flex; align-items: center; justify-content: space-between; }
+  .stat-card__icon {
+    width: 44px; height: 44px;
+    border-radius: var(--radius-lg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .stat-card--blue .stat-card__icon { background: var(--blue-10); color: var(--blue-50); }
+  .stat-card--purple .stat-card__icon { background: #f6f2ff; color: var(--violet); }
+  .stat-card--green .stat-card__icon { background: var(--green-10); color: var(--green-50); }
+  .stat-card--orange .stat-card__icon { background: var(--yellow-10); color: #ff832b; }
+  .stat-card__trend {
+    font-size: .72rem; font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+  }
+  .stat-card--blue .stat-card__trend { background: var(--blue-10); color: var(--blue-60); }
+  .stat-card--purple .stat-card__trend { background: #f6f2ff; color: var(--violet); }
+  .stat-card--green .stat-card__trend { background: var(--green-10); color: var(--green-50); }
+  .stat-card--orange .stat-card__trend { background: var(--yellow-10); color: #7a4f00; }
+  .stat-card__value {
+    font-size: 2.25rem; font-weight: 800;
+    color: var(--color-text); line-height: 1;
+    letter-spacing: -1px;
+  }
+  .stat-card__label {
+    font-size: .8125rem; font-weight: 500;
+    color: var(--color-text-muted);
+  }
+
+  /* ── Main 2-col Grid ─────────────────────────────────────────── */
+  .dash-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--sp-6);
+    margin-bottom: var(--sp-8);
+    align-items: start;
+  }
+
+  /* ── Chart Cards ─────────────────────────────────────────────── */
+  .dash-chart-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-6);
+    margin-bottom: var(--sp-6);
+  }
+  .dash-chart-card:last-child { margin-bottom: 0; }
+  .dash-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-5);
+    gap: var(--sp-3);
+    flex-wrap: wrap;
+  }
+  .dash-card-title {
+    font-size: 1rem; font-weight: 700;
+    color: var(--color-text); letter-spacing: -.2px;
+    display: flex; align-items: center; gap: var(--sp-2);
+  }
+  .dash-card-title i { color: var(--blue-50); font-size: .95rem; }
+  .dash-card-badge {
+    display: inline-flex; align-items: center;
+    padding: 3px 10px;
+    background: var(--blue-10);
+    border: 1px solid var(--blue-20);
+    color: var(--blue-60);
+    border-radius: var(--radius-full);
+    font-size: .72rem; font-weight: 700; letter-spacing: .3px;
+  }
+  .chart-wrap { position: relative; height: 210px; }
+
+  /* ── Right column ────────────────────────────────────────────── */
+  .dash-right { display: flex; flex-direction: column; gap: var(--sp-6); }
+
+  /* ── Coverage (doughnut) ─────────────────────────────────────── */
+  .dash-coverage {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-6);
+  }
+  .doughnut-wrap { position: relative; height: 200px; }
+  .coverage-legend {
+    display: flex; flex-direction: column;
+    gap: var(--sp-2); margin-top: var(--sp-4);
+  }
+  .legend-row {
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: .825rem;
+  }
+  .legend-left { display: flex; align-items: center; gap: var(--sp-2); }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%; flex-shrink: 0;
+  }
+  .legend-label { color: var(--color-text); font-weight: 500; }
+  .legend-pct { color: var(--color-text-muted); font-weight: 600; font-size: .78rem; }
+
+  /* ── Weekly Goals ────────────────────────────────────────────── */
+  .dash-goals {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-6);
+  }
+  .goal-list { display: flex; flex-direction: column; gap: var(--sp-4); }
+  .goal-item {}
+  .goal-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: var(--sp-2); gap: var(--sp-2);
+  }
+  .goal-name { font-size: .85rem; font-weight: 600; color: var(--color-text); }
+  .goal-fraction { font-size: .78rem; color: var(--color-text-muted); white-space: nowrap; }
+  .goal-done .goal-fraction { color: var(--green-50); font-weight: 700; }
+  .progress-track {
+    height: 7px; background: var(--gray-20);
+    border-radius: var(--radius-full); overflow: hidden;
+  }
+  [data-theme="dark"] .progress-track { background: var(--gray-80); }
+  .progress-fill {
+    height: 100%; border-radius: var(--radius-full);
+    transition: width 1.2s cubic-bezier(.4,0,.2,1);
+    width: 0;
+  }
+  .progress-fill--blue { background: linear-gradient(90deg, var(--blue-50), var(--blue-30)); }
+  .progress-fill--green { background: linear-gradient(90deg, var(--green-50), #42be65); }
+  .progress-fill--purple { background: linear-gradient(90deg, var(--violet), #a56eff); }
+  .progress-fill--teal { background: linear-gradient(90deg, var(--teal), #08bdba); }
+
+  /* ── Recent Activity ─────────────────────────────────────────── */
+  .dash-activity {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-6);
+    margin-bottom: var(--sp-8);
+  }
+  .activity-list { display: flex; flex-direction: column; }
+  .activity-item {
+    display: flex; align-items: flex-start;
+    gap: var(--sp-4); padding: var(--sp-4) 0;
+    border-bottom: 1px solid var(--color-border);
+    transition: background var(--ease);
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-item:hover { background: var(--color-surface); margin: 0 calc(-1 * var(--sp-4)); padding-left: var(--sp-4); padding-right: var(--sp-4); border-radius: var(--radius-md); }
+  .activity-icon {
+    width: 38px; height: 38px; border-radius: var(--radius-full);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .875rem; flex-shrink: 0; margin-top: 2px;
+  }
+  .activity-icon--blue { background: var(--blue-10); color: var(--blue-50); }
+  .activity-icon--purple { background: #f6f2ff; color: var(--violet); }
+  .activity-icon--green { background: var(--green-10); color: var(--green-50); }
+  .activity-icon--teal { background: #d9fbfb; color: var(--teal); }
+  .activity-icon--orange { background: var(--yellow-10); color: #ff832b; }
+  .activity-body { flex: 1; min-width: 0; }
+  .activity-text { font-size: .875rem; font-weight: 500; color: var(--color-text); line-height: 1.5; }
+  .activity-meta {
+    display: flex; align-items: center; gap: var(--sp-3);
+    margin-top: var(--sp-1);
+  }
+  .activity-time { font-size: .75rem; color: var(--color-text-muted); }
+  .activity-type-badge {
+    font-size: .65rem; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+    padding: 2px 8px; border-radius: var(--radius-full);
+  }
+  .type-badge--blue { background: var(--blue-10); color: var(--blue-60); }
+  .type-badge--purple { background: #f6f2ff; color: var(--violet); }
+  .type-badge--green { background: var(--green-10); color: var(--green-50); }
+  .type-badge--teal { background: #d9fbfb; color: var(--teal); }
+  .type-badge--orange { background: var(--yellow-10); color: #ff832b; }
+
+  /* ── Quick Actions ───────────────────────────────────────────── */
+  .dash-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--sp-5);
+  }
+  .quick-card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-5) var(--sp-4);
+    text-align: center;
+    text-decoration: none;
+    display: flex; flex-direction: column;
+    align-items: center; gap: var(--sp-3);
+    transition: transform var(--ease-out), box-shadow var(--ease-out), border-color var(--ease);
+    position: relative; overflow: hidden;
+  }
+  .quick-card::before {
+    content: ''; position: absolute;
+    inset: 0; border-radius: var(--radius-xl);
+    background: linear-gradient(135deg, var(--blue-50), var(--blue-60));
+    opacity: 0; transition: opacity var(--ease);
+  }
+  .quick-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-blue); border-color: var(--blue-40); }
+  .quick-card:hover::before { opacity: .04; }
+  .quick-card:hover .quick-card__icon { background: var(--blue-50); color: var(--white); transform: scale(1.12); }
+  .quick-card:hover .quick-card__label { color: var(--blue-50); }
+  .quick-card__icon {
+    width: 52px; height: 52px;
+    background: var(--blue-10); color: var(--blue-50);
+    border-radius: var(--radius-lg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem;
+    transition: background var(--ease), color var(--ease), transform var(--ease-bounce);
+    position: relative; z-index: 1;
+  }
+  .quick-card__label {
+    font-size: .875rem; font-weight: 700;
+    color: var(--color-text); letter-spacing: -.1px;
+    transition: color var(--ease);
+    position: relative; z-index: 1;
+  }
+  .quick-card__arrow {
+    font-size: .7rem; color: var(--color-text-muted);
+    position: relative; z-index: 1;
+    transition: color var(--ease), transform var(--ease);
+  }
+  .quick-card:hover .quick-card__arrow { color: var(--blue-40); transform: translateX(4px); }
+
+  /* ── Section title inside dash ───────────────────────────────── */
+  .dash-section-title {
+    font-size: 1.125rem; font-weight: 700;
+    color: var(--color-text); letter-spacing: -.3px;
+    margin-bottom: var(--sp-5);
+    display: flex; align-items: center; gap: var(--sp-3);
+  }
+  .dash-section-title::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--color-border);
+  }
+
+  /* ── Responsive ─────────────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .dash-stats { grid-template-columns: repeat(2, 1fr); }
+    .dash-main { grid-template-columns: 1fr; }
+    .dash-right { flex-direction: row; flex-wrap: wrap; }
+    .dash-coverage, .dash-goals { flex: 1; min-width: 260px; }
+  }
+  @media (max-width: 700px) {
+    .dash-stats { grid-template-columns: repeat(2, 1fr); gap: var(--sp-3); }
+    .dash-quick-actions { grid-template-columns: repeat(2, 1fr); }
+    .dash-right { flex-direction: column; }
+  }
+  @media (max-width: 480px) {
+    .dash-stats { grid-template-columns: 1fr 1fr; }
+    .stat-card__value { font-size: 1.75rem; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────── -->
+<header id="nav" class="nav" role="banner">
+  <div class="container nav__inner">
+    <a href="../index.html" class="nav__logo" aria-label="Smart Study Generator home">
+      <span class="nav__logo-badge">IBM</span>
+      <span class="nav__logo-text">Smart Study Generator</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary navigation">
+      <a href="../index.html" class="nav__link">Home</a>
+      <a href="upload.html" class="nav__link">Upload Notes</a>
+      <a href="chat.html" class="nav__link">AI Chat</a>
+      <a href="quiz.html" class="nav__link">Quiz</a>
+      <a href="flashcards.html" class="nav__link">Flashcards</a>
+      <a href="planner.html" class="nav__link">Study Planner</a>
+      <a href="dashboard.html" class="nav__link active">Dashboard</a>
+      <a href="about.html" class="nav__link">About</a>
+      <a href="contact.html" class="nav__link">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <button class="nav__theme-btn" id="themeToggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+      <a href="dashboard.html" class="btn btn-primary btn-sm">Dashboard</a>
+    </div>
+    <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span><span class="nav__toggle-bar"></span>
+    </button>
+  </div>
+  <nav class="nav__mobile" id="navMobile">
+    <a href="../index.html" class="nav__link">Home</a>
+    <a href="upload.html" class="nav__link">Upload Notes</a>
+    <a href="chat.html" class="nav__link">AI Chat</a>
+    <a href="quiz.html" class="nav__link">Quiz</a>
+    <a href="flashcards.html" class="nav__link">Flashcards</a>
+    <a href="planner.html" class="nav__link">Study Planner</a>
+    <a href="dashboard.html" class="nav__link active">Dashboard</a>
+    <a href="about.html" class="nav__link">About</a>
+    <a href="contact.html" class="nav__link">Contact</a>
+    <a href="dashboard.html" class="btn btn-primary" style="margin-top:.5rem;justify-content:center;">Dashboard</a>
+  </nav>
+</header>
+
+<!-- ── Dashboard Page ─────────────────────────────────────────── -->
+<div class="dash-page">
+
+  <!-- Welcome Bar -->
+  <div class="dash-welcome">
+    <div class="container dash-welcome__inner">
+      <div class="dash-welcome__left">
+        <h1>Good day! 👋</h1>
+        <p>Here's your study overview</p>
+      </div>
+      <div class="dash-welcome__right">
+        <span class="dash-last-active">
+          <i class="fa-regular fa-clock"></i>
+          Last active: Today
+        </span>
+        <span class="dash-status-badge">
+          <span class="dash-status-dot"></span>
+          IBM Granite AI — Active
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard Content -->
+  <div class="dash-content">
+    <div class="container">
+
+      <!-- Stat Cards -->
+      <div class="dash-stats" data-reveal>
+        <div class="stat-card stat-card--blue" data-reveal data-reveal-delay="1">
+          <div class="stat-card__top">
+            <div class="stat-card__icon"><i class="fa-regular fa-clock"></i></div>
+            <span class="stat-card__trend">↑ +3 this week</span>
+          </div>
+          <div class="stat-card__value"><span data-count="47" data-suffix="h">47h</span></div>
+          <div class="stat-card__label">Study Hours</div>
+        </div>
+        <div class="stat-card stat-card--purple" data-reveal data-reveal-delay="2">
+          <div class="stat-card__top">
+            <div class="stat-card__icon"><i class="fa-regular fa-file-alt"></i></div>
+            <span class="stat-card__trend">↑ +2 uploaded</span>
+          </div>
+          <div class="stat-card__value"><span data-count="12">12</span></div>
+          <div class="stat-card__label">Uploaded Notes</div>
+        </div>
+        <div class="stat-card stat-card--green" data-reveal data-reveal-delay="3">
+          <div class="stat-card__top">
+            <div class="stat-card__icon"><i class="fa-regular fa-check-circle"></i></div>
+            <span class="stat-card__trend">↑ +5 this week</span>
+          </div>
+          <div class="stat-card__value"><span data-count="28">28</span></div>
+          <div class="stat-card__label">Quizzes Completed</div>
+        </div>
+        <div class="stat-card stat-card--orange" data-reveal data-reveal-delay="4">
+          <div class="stat-card__top">
+            <div class="stat-card__icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <span class="stat-card__trend">↓ -1 from last week</span>
+          </div>
+          <div class="stat-card__value"><span data-count="4">4</span></div>
+          <div class="stat-card__label">Weak Topics</div>
+        </div>
+      </div>
+
+      <!-- Main Grid: Left (charts) + Right (doughnut, goals) -->
+      <div class="dash-main">
+        <!-- LEFT COLUMN -->
+        <div class="dash-left">
+          <!-- Study Progress Line Chart -->
+          <div class="dash-chart-card" data-reveal>
+            <div class="dash-card-header">
+              <span class="dash-card-title">
+                <i class="fa-solid fa-chart-line"></i>
+                Study Progress
+              </span>
+              <span class="dash-card-badge">This Week</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="progressChart" role="img" aria-label="Weekly study hours line chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Quiz Performance Bar Chart -->
+          <div class="dash-chart-card" data-reveal>
+            <div class="dash-card-header">
+              <span class="dash-card-title">
+                <i class="fa-solid fa-chart-bar"></i>
+                Quiz Performance
+              </span>
+              <span class="dash-card-badge">Last 6 Quizzes</span>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="quizChart" role="img" aria-label="Quiz performance bar chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="dash-right">
+          <!-- Subject Coverage Doughnut -->
+          <div class="dash-coverage" data-reveal>
+            <div class="dash-card-header">
+              <span class="dash-card-title">
+                <i class="fa-solid fa-circle-half-stroke"></i>
+                Subject Coverage
+              </span>
+            </div>
+            <div class="doughnut-wrap">
+              <canvas id="subjectChart" role="img" aria-label="Subject coverage doughnut chart"></canvas>
+            </div>
+            <div class="coverage-legend">
+              <div class="legend-row">
+                <div class="legend-left">
+                  <span class="legend-dot" style="background:#0f62fe"></span>
+                  <span class="legend-label">Machine Learning</span>
+                </div>
+                <span class="legend-pct">35%</span>
+              </div>
+              <div class="legend-row">
+                <div class="legend-left">
+                  <span class="legend-dot" style="background:#6929c4"></span>
+                  <span class="legend-label">Data Structures</span>
+                </div>
+                <span class="legend-pct">25%</span>
+              </div>
+              <div class="legend-row">
+                <div class="legend-left">
+                  <span class="legend-dot" style="background:#009d9a"></span>
+                  <span class="legend-label">Algorithms</span>
+                </div>
+                <span class="legend-pct">20%</span>
+              </div>
+              <div class="legend-row">
+                <div class="legend-left">
+                  <span class="legend-dot" style="background:#1192e8"></span>
+                  <span class="legend-label">Networks</span>
+                </div>
+                <span class="legend-pct">20%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Goals -->
+          <div class="dash-goals" data-reveal>
+            <div class="dash-card-header">
+              <span class="dash-card-title">
+                <i class="fa-solid fa-bullseye"></i>
+                Weekly Goals
+              </span>
+            </div>
+            <div class="goal-list">
+              <div class="goal-item">
+                <div class="goal-top">
+                  <span class="goal-name">Study 20 hours</span>
+                  <span class="goal-fraction">18 / 20</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill progress-fill--blue" data-goal-width="90"></div>
+                </div>
+              </div>
+              <div class="goal-item">
+                <div class="goal-top">
+                  <span class="goal-name">Complete 5 quizzes</span>
+                  <span class="goal-fraction">4 / 5</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill progress-fill--green" data-goal-width="80"></div>
+                </div>
+              </div>
+              <div class="goal-item">
+                <div class="goal-top">
+                  <span class="goal-name">Review 30 flashcards</span>
+                  <span class="goal-fraction">22 / 30</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill progress-fill--purple" data-goal-width="73"></div>
+                </div>
+              </div>
+              <div class="goal-item goal-done">
+                <div class="goal-top">
+                  <span class="goal-name">Upload 3 notes <i class="fa-solid fa-check-circle" style="color:var(--green-50);font-size:.8rem;"></i></span>
+                  <span class="goal-fraction">3 / 3 ✓</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill progress-fill--teal" data-goal-width="100"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity (full width) -->
+      <div class="dash-activity" data-reveal>
+        <div class="dash-card-header">
+          <span class="dash-card-title">
+            <i class="fa-solid fa-history"></i>
+            Recent Activity
+          </span>
+          <span class="dash-card-badge">Last 7 days</span>
+        </div>
+        <div class="activity-list">
+          <div class="activity-item">
+            <div class="activity-icon activity-icon--blue"><i class="fa-solid fa-upload"></i></div>
+            <div class="activity-body">
+              <div class="activity-text">Uploaded <strong>ML_Chapter5.pdf</strong> — Machine Learning notes</div>
+              <div class="activity-meta">
+                <span class="activity-time"><i class="fa-regular fa-clock" style="font-size:.65rem;"></i> 2 hours ago</span>
+                <span class="activity-type-badge type-badge--blue">Upload</span>
+              </div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon--purple"><i class="fa-solid fa-robot"></i></div>
+            <div class="activity-body">
+              <div class="activity-text">AI Chat session — <strong>Machine Learning</strong> concepts discussed</div>
+              <div class="activity-meta">
+                <span class="activity-time"><i class="fa-regular fa-clock" style="font-size:.65rem;"></i> 3 hours ago</span>
+                <span class="activity-type-badge type-badge--purple">AI Chat</span>
+              </div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon--green"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="activity-body">
+              <div class="activity-text">Completed Quiz — <strong>Data Structures</strong> with score <strong>91%</strong></div>
+              <div class="activity-meta">
+                <span class="activity-time"><i class="fa-regular fa-clock" style="font-size:.65rem;"></i> Yesterday</span>
+                <span class="activity-type-badge type-badge--green">Quiz</span>
+              </div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon--teal"><i class="fa-regular fa-clone"></i></div>
+            <div class="activity-body">
+              <div class="activity-text">Reviewed <strong>15 flashcards</strong> — Algorithms deck</div>
+              <div class="activity-meta">
+                <span class="activity-time"><i class="fa-regular fa-clock" style="font-size:.65rem;"></i> Yesterday</span>
+                <span class="activity-type-badge type-badge--teal">Flashcards</span>
+              </div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon--orange"><i class="fa-regular fa-calendar"></i></div>
+            <div class="activity-body">
+              <div class="activity-text">Generated <strong>Study Plan</strong> — 14-day schedule created</div>
+              <div class="activity-meta">
+                <span class="activity-time"><i class="fa-regular fa-clock" style="font-size:.65rem;"></i> 2 days ago</span>
+                <span class="activity-type-badge type-badge--orange">Planner</span>
+              </div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <div class="activity-icon activity-icon--blue"><i class="fa-regular fa-file-alt"></i></div>
+            <div class="activity-body">
+              <div class="activity-text">Uploaded <strong>DataStructures.docx</strong> — Course notes</div>
+              <div class="activity-meta">
+                <span class="activity-time"><i class="fa-regular fa-clock" style="font-size:.65rem;"></i> 3 days ago</span>
+                <span class="activity-type-badge type-badge--blue">Upload</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="dash-section-title" data-reveal>Quick Actions</div>
+      <div class="dash-quick-actions" data-reveal>
+        <a href="upload.html" class="quick-card">
+          <div class="quick-card__icon"><i class="fa-solid fa-upload"></i></div>
+          <div class="quick-card__label">Upload Notes</div>
+          <div class="quick-card__arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        </a>
+        <a href="quiz.html" class="quick-card">
+          <div class="quick-card__icon"><i class="fa-solid fa-circle-question"></i></div>
+          <div class="quick-card__label">Start Quiz</div>
+          <div class="quick-card__arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        </a>
+        <a href="chat.html" class="quick-card">
+          <div class="quick-card__icon"><i class="fa-solid fa-robot"></i></div>
+          <div class="quick-card__label">AI Chat</div>
+          <div class="quick-card__arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        </a>
+        <a href="planner.html" class="quick-card">
+          <div class="quick-card__icon"><i class="fa-regular fa-calendar"></i></div>
+          <div class="quick-card__label">Study Planner</div>
+          <div class="quick-card__arrow"><i class="fa-solid fa-arrow-right"></i></div>
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer ──────────────────────────────────────────────────── -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer__grid">
+      <div>
+        <div class="footer__brand-logo"><span class="footer__ibm-badge">IBM</span><span class="footer__brand-name">Smart Study Generator</span></div>
+        <p class="footer__brand-desc">An AI-powered study assistant built on IBM Granite AI and watsonx.ai, developed for IBM University Engagement.</p>
+      </div>
+      <div><div class="footer__col-title">Features</div><ul class="footer__col-links"><li><a href="upload.html">Upload Notes</a></li><li><a href="chat.html">AI Chat</a></li><li><a href="quiz.html">Quiz Generator</a></li><li><a href="flashcards.html">Flashcards</a></li><li><a href="planner.html">Study Planner</a></li><li><a href="dashboard.html">Dashboard</a></li></ul></div>
+      <div><div class="footer__col-title">Technology</div><ul class="footer__col-links"><li><a href="https://www.ibm.com/granite" target="_blank" rel="noopener">IBM Granite</a></li><li><a href="https://www.ibm.com/watsonx" target="_blank" rel="noopener">IBM watsonx.ai</a></li><li><a href="https://cloud.ibm.com" target="_blank" rel="noopener">IBM Cloud</a></li></ul></div>
+      <div><div class="footer__col-title">Project</div><ul class="footer__col-links"><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="https://ibm.com/university" target="_blank" rel="noopener">IBM University</a></li></ul></div>
+    </div>
+    <div class="footer__bottom"><p class="footer__copy">© 2025 Smart Study Generator Agent — <a href="https://ibm.com/university" target="_blank" rel="noopener">IBM University Engagement Project</a></p><nav class="footer__legal"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Accessibility</a></nav></div>
+  </div>
+</footer>
+
+<script src="../js/app.js"></script>
+<script>
+'use strict';
+// ── Charts init (run after Chart.js deferred load) ──────────────
+window.addEventListener('load', function () {
+
+  // ── Shared chart defaults ──────────────────────────────────────
+  Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+  Chart.defaults.color = getComputedStyle(document.documentElement)
+    .getPropertyValue('--color-text-muted').trim() || '#6f6f6f';
+
+  const isDark = () => document.documentElement.dataset.theme === 'dark';
+  const gridColor = () => isDark() ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.05)';
+  const tickColor = () => isDark() ? 'rgba(255,255,255,.35)' : '#8d8d8d';
+
+  // ── Line Chart: Study Progress ─────────────────────────────────
+  const progressCtx = document.getElementById('progressChart').getContext('2d');
+  const blueGrad = progressCtx.createLinearGradient(0, 0, 0, 210);
+  blueGrad.addColorStop(0, 'rgba(15,98,254,.22)');
+  blueGrad.addColorStop(1, 'rgba(15,98,254,0)');
+
+  const progressChart = new Chart(progressCtx, {
+    type: 'line',
+    data: {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      datasets: [{
+        label: 'Study Hours',
+        data: [2, 3.5, 1.5, 4, 3, 2.5, 4.5],
+        borderColor: '#0f62fe',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#0f62fe',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        fill: true,
+        backgroundColor: blueGrad,
+        tension: 0.42
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 1000, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark() ? '#1e2535' : '#ffffff',
+          titleColor: isDark() ? '#f0f4ff' : '#161616',
+          bodyColor: isDark() ? '#8898b8' : '#6f6f6f',
+          borderColor: isDark() ? '#2a3550' : '#e4e9f5',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 10,
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.y} hrs`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: tickColor(), font: { size: 12 } }
+        },
+        y: {
+          grid: { color: gridColor(), drawBorder: false },
+          border: { display: false },
+          ticks: { color: tickColor(), font: { size: 12 }, callback: v => v + 'h' },
+          suggestedMin: 0,
+          suggestedMax: 6
+        }
+      }
+    }
+  });
+
+  // ── Bar Chart: Quiz Performance ────────────────────────────────
+  const quizCtx = document.getElementById('quizChart').getContext('2d');
+  const barGrad = quizCtx.createLinearGradient(0, 0, 0, 210);
+  barGrad.addColorStop(0, '#4589ff');
+  barGrad.addColorStop(1, '#0043ce');
+
+  new Chart(quizCtx, {
+    type: 'bar',
+    data: {
+      labels: ['Quiz 1', 'Quiz 2', 'Quiz 3', 'Quiz 4', 'Quiz 5', 'Quiz 6'],
+      datasets: [{
+        label: 'Score (%)',
+        data: [72, 85, 68, 91, 78, 94],
+        backgroundColor: barGrad,
+        borderRadius: 8,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 1000, easing: 'easeInOutQuart' },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark() ? '#1e2535' : '#ffffff',
+          titleColor: isDark() ? '#f0f4ff' : '#161616',
+          bodyColor: isDark() ? '#8898b8' : '#6f6f6f',
+          borderColor: isDark() ? '#2a3550' : '#e4e9f5',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 10,
+          callbacks: { label: ctx => ` Score: ${ctx.parsed.y}%` }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: tickColor(), font: { size: 12 } }
+        },
+        y: {
+          grid: { color: gridColor() },
+          border: { display: false },
+          ticks: { color: tickColor(), font: { size: 12 }, callback: v => v + '%' },
+          suggestedMin: 50,
+          suggestedMax: 100
+        }
+      }
+    }
+  });
+
+  // ── Doughnut Chart: Subject Coverage ──────────────────────────
+  const subjectCtx = document.getElementById('subjectChart').getContext('2d');
+  new Chart(subjectCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Machine Learning', 'Data Structures', 'Algorithms', 'Networks'],
+      datasets: [{
+        data: [35, 25, 20, 20],
+        backgroundColor: ['#0f62fe', '#6929c4', '#009d9a', '#1192e8'],
+        borderColor: isDark() ? '#161b27' : '#ffffff',
+        borderWidth: 3,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 1000, easing: 'easeInOutQuart' },
+      cutout: '68%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: isDark() ? '#1e2535' : '#ffffff',
+          titleColor: isDark() ? '#f0f4ff' : '#161616',
+          bodyColor: isDark() ? '#8898b8' : '#6f6f6f',
+          borderColor: isDark() ? '#2a3550' : '#e4e9f5',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 10,
+          callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` }
+        }
+      }
+    }
+  });
+
+  // Re-render charts on theme change
+  document.getElementById('themeToggle')?.addEventListener('click', () => {
+    setTimeout(() => {
+      [progressChart].forEach(c => {
+        c.options.plugins.tooltip.backgroundColor = isDark() ? '#1e2535' : '#ffffff';
+        c.options.scales.x.ticks.color = tickColor();
+        c.options.scales.y.ticks.color = tickColor();
+        c.options.scales.y.grid.color = gridColor();
+        c.update();
+      });
+    }, 50);
+  });
+});
+
+// ── Animate progress bars on intersection ──────────────────────
+(function () {
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.querySelectorAll('.progress-fill[data-goal-width]').forEach(bar => {
+        setTimeout(() => { bar.style.width = bar.dataset.goalWidth + '%'; }, 200);
+      });
+      io.unobserve(e.target);
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.dash-goals').forEach(el => io.observe(el));
+})();
+</script>
+</body>
+</html>

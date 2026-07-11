@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AI Flashcards — Master key concepts with spaced-repetition flashcard decks powered by IBM Granite AI." />
+  <meta name="theme-color" content="#0f62fe" />
+  <title>Flashcards | Smart Study Generator Agent</title>
+
+  <!-- Global styles -->
+  <link rel="stylesheet" href="../css/global.css" />
+  <!-- Font Awesome 6.5 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+  /* ── Flashcard Page — Inline Styles ────────────────────────── */
+
+  .fc-main {
+    padding: calc(var(--nav-h) + var(--sp-12)) 0 var(--sp-20);
+    min-height: 100vh;
+    background: var(--color-surface);
+  }
+  .fc-inner {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 0 var(--sp-6);
+  }
+
+  /* ── Deck Selector ── */
+  .deck-selector {}
+  .deck-selector__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: var(--sp-2);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  .deck-selector__title i { color: var(--blue-50); }
+  .deck-selector__sub {
+    font-size: .9375rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--sp-8);
+    line-height: 1.65;
+  }
+  .deck-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--sp-4);
+  }
+  .deck-card {
+    background: var(--color-bg);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-7) var(--sp-5);
+    cursor: pointer;
+    transition: border-color 240ms ease, box-shadow 240ms ease, transform 300ms cubic-bezier(0,.55,.45,1), background 240ms ease;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .deck-card:hover { background: linear-gradient(145deg, var(--color-bg), var(--color-surface)); }
+  .deck-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--blue-50), var(--blue-40));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 240ms ease;
+  }
+  .deck-card:hover {
+    border-color: var(--blue-40);
+    box-shadow: var(--shadow-blue-sm);
+    transform: translateY(-5px);
+  }
+  .deck-card:hover::before { transform: scaleX(1); }
+  .deck-card__icon {
+    font-size: 1.75rem;
+    color: var(--blue-50);
+    margin-bottom: var(--sp-3);
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  [data-theme="dark"] .deck-card__icon { color: var(--blue-30); }
+  .deck-card__name {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: var(--sp-1);
+    line-height: 1.3;
+  }
+  .deck-card__count {
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: var(--color-surface);
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    display: inline-block;
+  }
+
+  /* ── Flashcard Viewer ── */
+  .flashcard-viewer { display: none; }
+  .flashcard-viewer.active { display: block; }
+
+  /* Back button */
+  .fc-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--sp-2) 0;
+    margin-bottom: var(--sp-6);
+    transition: color 240ms ease, transform 240ms ease;
+  }
+  .fc-back-btn:hover { color: var(--blue-50); transform: translateX(-3px); }
+
+  /* Viewer header */
+  .fc-viewer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-6);
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+  }
+  .fc-deck-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+  .fc-progress-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    font-size: .8125rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+  .fc-progress-meta strong { color: var(--color-text); }
+
+  /* 3D Card Scene */
+  .flashcard-scene {
+    perspective: 1200px;
+    width: 100%;
+    min-height: 300px;
+    margin-bottom: var(--sp-6);
+    cursor: pointer;
+  }
+  .flashcard {
+    position: relative;
+    width: 100%;
+    min-height: 300px;
+    transform-style: preserve-3d;
+    transition: transform 560ms cubic-bezier(.4, 0, .2, 1);
+    border-radius: var(--radius-xl);
+  }
+  .flashcard.flipped {
+    transform: rotateY(180deg);
+  }
+  .flashcard__front,
+  .flashcard__back {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-xl);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: var(--sp-10) var(--sp-10);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+  }
+  /* Front accent stripe */
+  .flashcard__front::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--blue-50), var(--blue-40), var(--cyan));
+  }
+  /* Back accent stripe */
+  .flashcard__back::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--teal), var(--blue-40), var(--violet));
+  }
+  .flashcard__front {
+    background: var(--color-bg);
+  }
+  .flashcard__back {
+    background: linear-gradient(145deg, #edf5ff 0%, #dde8ff 100%);
+    transform: rotateY(180deg);
+  }
+  [data-theme="dark"] .flashcard__back {
+    background: linear-gradient(145deg, #0d1a38 0%, #111d3d 100%);
+  }
+  .flashcard__side-label {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.1px;
+    margin-bottom: var(--sp-4);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: 3px 12px;
+    border-radius: var(--radius-full);
+  }
+  .flashcard__front .flashcard__side-label {
+    color: var(--blue-60);
+    background: var(--blue-10);
+    border: 1px solid var(--blue-20);
+  }
+  [data-theme="dark"] .flashcard__front .flashcard__side-label {
+    color: var(--blue-30);
+    background: rgba(15,98,254,.15);
+    border-color: rgba(15,98,254,.3);
+  }
+  .flashcard__back .flashcard__side-label {
+    color: #005d5d;
+    background: #d9fbfb;
+    border: 1px solid #3ddbd9;
+  }
+  [data-theme="dark"] .flashcard__back .flashcard__side-label {
+    color: #3ddbd9;
+    background: rgba(0,157,154,.15);
+    border-color: rgba(0,157,154,.3);
+  }
+  .flashcard__text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.6;
+    max-width: 560px;
+    margin-bottom: var(--sp-5);
+  }
+  .flashcard__back .flashcard__text {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--blue-70);
+  }
+  [data-theme="dark"] .flashcard__back .flashcard__text {
+    color: var(--blue-20);
+  }
+  .flashcard__hint {
+    font-size: .78rem;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .flashcard__hint i { font-size: .7rem; }
+
+  /* ── Controls ── */
+  .fc-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-4);
+    margin-bottom: var(--sp-5);
+  }
+  .fc-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    font-size: .9375rem;
+    cursor: pointer;
+    transition: all 240ms ease;
+    flex-shrink: 0;
+  }
+  .fc-icon-btn:hover {
+    border-color: var(--blue-40);
+    color: var(--blue-50);
+    background: var(--blue-10);
+    transform: scale(1.08);
+  }
+  .fc-icon-btn:active { transform: scale(.94); }
+  [data-theme="dark"] .fc-icon-btn:hover { background: rgba(15,98,254,.12); }
+
+  #flipCard {
+    width: auto;
+    height: auto;
+    padding: .75rem 1.75rem;
+    border-radius: var(--radius-full);
+    font-size: .9375rem;
+    font-weight: 600;
+    gap: var(--sp-2);
+    background: linear-gradient(135deg, var(--blue-50), var(--blue-60));
+    color: #fff;
+    border-color: transparent;
+    box-shadow: var(--shadow-blue-sm);
+  }
+  #flipCard:hover {
+    background: linear-gradient(135deg, var(--blue-40), var(--blue-50));
+    box-shadow: var(--shadow-blue);
+    transform: translateY(-2px) scale(1.0);
+    color: #fff;
+    border-color: transparent;
+  }
+
+  /* ── Actions ── */
+  .fc-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-8);
+    flex-wrap: wrap;
+  }
+  .fc-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    padding: .5rem 1.25rem;
+    border-radius: var(--radius-full);
+    font-size: .8125rem;
+    font-weight: 600;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: all 240ms ease;
+  }
+  .fc-action-btn:hover {
+    border-color: var(--blue-40);
+    color: var(--color-text);
+    background: var(--color-surface);
+    transform: translateY(-1px);
+  }
+  .fc-action-btn.learned:hover {
+    border-color: var(--green-50);
+    color: var(--green-50);
+    background: var(--green-10);
+  }
+  .fc-action-btn.reset:hover {
+    border-color: var(--red-50);
+    color: var(--red-50);
+    background: var(--red-10);
+  }
+  [data-theme="dark"] .fc-action-btn:hover { background: rgba(255,255,255,.06); }
+  [data-theme="dark"] .fc-action-btn.learned:hover { background: rgba(25,128,56,.12); }
+  [data-theme="dark"] .fc-action-btn.reset:hover   { background: rgba(218,30,40,.12); }
+
+  /* ── Stats Bar ── */
+  .fc-stats {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+    padding: var(--sp-5) var(--sp-6);
+  }
+  .fc-stats__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--sp-3);
+  }
+  .fc-stats__label {
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--color-text);
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .fc-stats__label i { color: var(--green-50); }
+  .fc-stats__nums {
+    font-size: .875rem;
+    color: var(--color-text-muted);
+  }
+  .fc-stats__nums strong { color: var(--color-text); }
+  .fc-stats-bar {
+    height: 8px;
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+  .fc-stats-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green-50), #0e8a3a);
+    border-radius: var(--radius-full);
+    transition: width 600ms cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── Empty deck state ── */
+  .fc-deck-empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    text-align: center;
+    padding: var(--sp-10);
+    background: var(--color-bg);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--sp-6);
+    gap: var(--sp-4);
+    color: var(--color-text-muted);
+  }
+  .fc-deck-empty.show { display: flex; }
+  .fc-deck-empty i { font-size: 2.5rem; color: var(--green-50); opacity: .7; }
+  .fc-deck-empty h3 { font-size: 1.125rem; font-weight: 700; color: var(--color-text); }
+  .fc-deck-empty p  { font-size: .9375rem; max-width: 300px; line-height: 1.6; }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .deck-grid { grid-template-columns: repeat(2, 1fr); }
+    .flashcard__front,
+    .flashcard__back { padding: var(--sp-8) var(--sp-6); }
+    .flashcard__text { font-size: 1rem; }
+  }
+  @media (max-width: 480px) {
+    .deck-grid { grid-template-columns: 1fr; }
+    .fc-controls { gap: var(--sp-3); }
+  }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════
+     NAVIGATION
+════════════════════════════════════════════════════════ -->
+<header id="nav" class="nav" role="banner">
+  <div class="container nav__inner">
+    <a href="../index.html" class="nav__logo" aria-label="Smart Study Generator home">
+      <span class="nav__logo-badge">IBM</span>
+      <span class="nav__logo-text">Smart Study Generator</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary navigation">
+      <a href="../index.html"   class="nav__link">Home</a>
+      <a href="upload.html"     class="nav__link">Upload Notes</a>
+      <a href="chat.html"       class="nav__link">AI Chat</a>
+      <a href="quiz.html"       class="nav__link">Quiz</a>
+      <a href="flashcards.html" class="nav__link active">Flashcards</a>
+      <a href="planner.html"    class="nav__link">Study Planner</a>
+      <a href="dashboard.html"  class="nav__link">Dashboard</a>
+      <a href="about.html"      class="nav__link">About</a>
+      <a href="contact.html"    class="nav__link">Contact</a>
+    </nav>
+    <div class="nav__actions">
+      <button class="nav__theme-btn" id="themeToggle" aria-label="Toggle dark mode">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+      <a href="dashboard.html" class="btn btn-primary btn-sm">Dashboard</a>
+    </div>
+    <button class="nav__toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span class="nav__toggle-bar"></span>
+      <span class="nav__toggle-bar"></span>
+      <span class="nav__toggle-bar"></span>
+    </button>
+  </div>
+  <nav class="nav__mobile" aria-label="Mobile navigation">
+    <a href="../index.html"   class="nav__link">Home</a>
+    <a href="upload.html"     class="nav__link">Upload Notes</a>
+    <a href="chat.html"       class="nav__link">AI Chat</a>
+    <a href="quiz.html"       class="nav__link">Quiz</a>
+    <a href="flashcards.html" class="nav__link active">Flashcards</a>
+    <a href="planner.html"    class="nav__link">Study Planner</a>
+    <a href="dashboard.html"  class="nav__link">Dashboard</a>
+    <a href="about.html"      class="nav__link">About</a>
+    <a href="contact.html"    class="nav__link">Contact</a>
+    <a href="dashboard.html" class="btn btn-primary" style="margin-top:.5rem;">Dashboard</a>
+  </nav>
+</header>
+
+<!-- ════════════════════════════════════════════════════════
+     PAGE HERO
+════════════════════════════════════════════════════════ -->
+<section class="page-hero" aria-label="Flashcards hero">
+  <div class="page-hero__bg" aria-hidden="true"></div>
+  <div class="container page-hero__inner" data-reveal>
+    <div class="page-hero-badge">
+      <span class="page-hero-badge__dot" aria-hidden="true"></span>
+      AI Flashcards &middot; IBM Granite AI
+    </div>
+    <h1 class="page-hero__title">
+      Master Key <span class="page-hero__accent">Concepts</span>
+    </h1>
+    <p class="page-hero__sub">
+      Spaced-repetition flashcard decks crafted by IBM Granite AI to help you
+      retain definitions, principles, and terminology — one card at a time.
+    </p>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════════════════════════
+     FLASHCARD MAIN
+════════════════════════════════════════════════════════ -->
+<main class="fc-main" id="fcMain">
+  <div class="fc-inner">
+
+    <!-- ── Deck Selector ── -->
+    <div class="deck-selector" id="deckSelector">
+      <h2 class="deck-selector__title">
+        <i class="fa-solid fa-layer-group"></i>
+        Choose a Deck
+      </h2>
+      <p class="deck-selector__sub">
+        Select a subject deck below to start reviewing. Mark cards as learned to track your progress,
+        or shuffle for a fresh challenge.
+      </p>
+
+      <div class="deck-grid" role="list" aria-label="Available flashcard decks">
+
+        <div class="deck-card" role="listitem" tabindex="0" data-deck="Machine Learning"
+             aria-label="Machine Learning deck, 12 cards">
+          <div class="deck-card__icon"><i class="fa-solid fa-brain"></i></div>
+          <div class="deck-card__name">Machine Learning</div>
+          <div class="deck-card__count">12 cards</div>
+        </div>
+
+        <div class="deck-card" role="listitem" tabindex="0" data-deck="Data Structures"
+             aria-label="Data Structures deck, 10 cards">
+          <div class="deck-card__icon"><i class="fa-solid fa-sitemap"></i></div>
+          <div class="deck-card__name">Data Structures</div>
+          <div class="deck-card__count">10 cards</div>
+        </div>
+
+        <div class="deck-card" role="listitem" tabindex="0" data-deck="Algorithms"
+             aria-label="Algorithms deck, 8 cards">
+          <div class="deck-card__icon"><i class="fa-solid fa-code"></i></div>
+          <div class="deck-card__name">Algorithms</div>
+          <div class="deck-card__count">8 cards</div>
+        </div>
+
+        <div class="deck-card" role="listitem" tabindex="0" data-deck="Computer Networks"
+             aria-label="Computer Networks deck, 10 cards">
+          <div class="deck-card__icon"><i class="fa-solid fa-network-wired"></i></div>
+          <div class="deck-card__name">Computer Networks</div>
+          <div class="deck-card__count">10 cards</div>
+        </div>
+
+        <div class="deck-card" role="listitem" tabindex="0" data-deck="Database Systems"
+             aria-label="Database Systems deck, 9 cards">
+          <div class="deck-card__icon"><i class="fa-solid fa-database"></i></div>
+          <div class="deck-card__name">Database Systems</div>
+          <div class="deck-card__count">9 cards</div>
+        </div>
+
+        <div class="deck-card" role="listitem" tabindex="0" data-deck="Operating Systems"
+             aria-label="Operating Systems deck, 11 cards">
+          <div class="deck-card__icon"><i class="fa-solid fa-server"></i></div>
+          <div class="deck-card__name">Operating Systems</div>
+          <div class="deck-card__count">11 cards</div>
+        </div>
+
+      </div>
+    </div>
+    <!-- /Deck Selector -->
+
+    <!-- ── Flashcard Viewer ── -->
+    <div class="flashcard-viewer" id="flashcardViewer" role="region" aria-label="Flashcard viewer">
+
+      <!-- Back -->
+      <button class="fc-back-btn" id="backToDecksBtn" aria-label="Back to deck selection">
+        <i class="fa-solid fa-arrow-left"></i>
+        Back to Decks
+      </button>
+
+      <!-- Header -->
+      <div class="fc-viewer-header">
+        <div class="fc-deck-name" id="fcDeckName">Machine Learning</div>
+        <div class="fc-progress-meta">
+          <span>Card <strong id="fcCardNum">1</strong> of <strong id="fcCardTotal">12</strong></span>
+          <span id="fcRemaining">12 remaining</span>
+        </div>
+      </div>
+
+      <!-- Empty deck state (all learned) -->
+      <div class="fc-deck-empty" id="fcDeckEmpty" aria-live="polite">
+        <i class="fa-solid fa-check-circle"></i>
+        <h3>All cards learned!</h3>
+        <p>You've mastered all the cards in this deck. Reset to practise again or choose a new deck.</p>
+        <div style="display:flex;gap:var(--sp-3);flex-wrap:wrap;justify-content:center;">
+          <button class="btn btn-outline" id="resetEmptyBtn">
+            <i class="fa-solid fa-rotate-left"></i> Reset Deck
+          </button>
+          <button class="btn btn-ghost" id="backFromEmptyBtn">
+            <i class="fa-solid fa-layer-group"></i> Choose Another Deck
+          </button>
+        </div>
+      </div>
+
+      <!-- 3D Card Scene -->
+      <div class="flashcard-scene" id="flashcardScene" aria-label="Flashcard — click or press Space to flip">
+        <div class="flashcard" id="flashcard" role="button" tabindex="0"
+             aria-label="Flashcard front face">
+
+          <!-- Front (Question) -->
+          <div class="flashcard__front" id="cardFront">
+            <div class="flashcard__side-label">
+              <i class="fa-solid fa-circle-question"></i>
+              Question
+            </div>
+            <p class="flashcard__text" id="cardQuestion">Loading…</p>
+            <span class="flashcard__hint">
+              <i class="fa-solid fa-hand-pointer"></i>
+              Click to reveal answer
+            </span>
+          </div>
+
+          <!-- Back (Answer) -->
+          <div class="flashcard__back" id="cardBack">
+            <div class="flashcard__side-label">
+              <i class="fa-solid fa-lightbulb"></i>
+              Answer
+            </div>
+            <p class="flashcard__text" id="cardAnswer">Loading…</p>
+            <span class="flashcard__hint">
+              <i class="fa-solid fa-hand-pointer"></i>
+              Click to go back
+            </span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Controls: Prev / Flip / Next -->
+      <div class="fc-controls" role="toolbar" aria-label="Card navigation">
+        <button class="fc-icon-btn" id="prevCard" title="Previous card (← Arrow)" aria-label="Previous card">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button class="fc-icon-btn" id="flipCard" title="Flip card (Space)" aria-label="Flip card">
+          <i class="fa-solid fa-rotate"></i>
+          Flip
+        </button>
+        <button class="fc-icon-btn" id="nextCard" title="Next card (→ Arrow)" aria-label="Next card">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- Actions: Shuffle / Mark Learned / Reset -->
+      <div class="fc-actions">
+        <button class="fc-action-btn" id="shuffleCards" title="Shuffle deck" aria-label="Shuffle cards">
+          <i class="fa-solid fa-shuffle"></i>
+          Shuffle
+        </button>
+        <button class="fc-action-btn learned" id="markLearned" title="Mark as learned (L)" aria-label="Mark current card as learned">
+          <i class="fa-solid fa-circle-check"></i>
+          Mark Learned
+        </button>
+        <button class="fc-action-btn reset" id="resetDeck" title="Reset deck" aria-label="Reset deck to all cards">
+          <i class="fa-solid fa-rotate-left"></i>
+          Reset
+        </button>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="fc-stats" role="region" aria-label="Learning progress">
+        <div class="fc-stats__row">
+          <div class="fc-stats__label">
+            <i class="fa-solid fa-chart-line"></i>
+            Progress
+          </div>
+          <div class="fc-stats__nums">
+            <strong id="statsLearned">0</strong> learned /
+            <strong id="statsTotal">0</strong> total
+          </div>
+        </div>
+        <div class="fc-stats-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Cards learned">
+          <div class="fc-stats-fill" id="statsFill" style="width:0%"></div>
+        </div>
+      </div>
+
+    </div>
+    <!-- /Flashcard Viewer -->
+
+  </div>
+</main>
+
+<!-- ════════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════ -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer__grid">
+      <div>
+        <div class="footer__brand-logo">
+          <span class="footer__ibm-badge">IBM</span>
+          <span class="footer__brand-name">Smart Study Generator</span>
+        </div>
+        <p class="footer__brand-desc">
+          An AI-powered study assistant built on IBM Granite AI and watsonx.ai, developed for IBM University Engagement.
+        </p>
+      </div>
+      <div>
+        <div class="footer__col-title">Features</div>
+        <ul class="footer__col-links">
+          <li><a href="upload.html">Upload Notes</a></li>
+          <li><a href="chat.html">AI Chat</a></li>
+          <li><a href="quiz.html">Quiz Generator</a></li>
+          <li><a href="flashcards.html">Flashcards</a></li>
+          <li><a href="planner.html">Study Planner</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer__col-title">Technology</div>
+        <ul class="footer__col-links">
+          <li><a href="https://www.ibm.com/granite" target="_blank" rel="noopener noreferrer">IBM Granite</a></li>
+          <li><a href="https://www.ibm.com/watsonx" target="_blank" rel="noopener noreferrer">IBM watsonx.ai</a></li>
+          <li><a href="https://cloud.ibm.com"       target="_blank" rel="noopener noreferrer">IBM Cloud</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer__col-title">Project</div>
+        <ul class="footer__col-links">
+          <li><a href="about.html">About</a></li>
+          <li><a href="contact.html">Contact</a></li>
+          <li><a href="https://ibm.com/university" target="_blank" rel="noopener noreferrer">IBM University</a></li>
+          <li><a href="#">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <p class="footer__copy">
+        &copy; 2025 Smart Study Generator Agent &mdash;
+        <a href="https://ibm.com/university" target="_blank" rel="noopener noreferrer">IBM University Engagement Project</a>
+      </p>
+      <nav class="footer__legal" aria-label="Legal links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Accessibility</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<!-- ── Shared JS ── -->
+<script src="../js/app.js"></script>
+
+<!-- ── Flashcard JS ── -->
+<script>
+'use strict';
+
+/* ─── Deck Data ──────────────────────────────────────────────── */
+const DECK_DATA = {
+  "Machine Learning": [
+    {q:"What is supervised learning?",a:"A type of ML where the model is trained on labelled input-output pairs to predict future outputs."},
+    {q:"Define gradient descent",a:"An iterative optimisation algorithm that minimises the loss function by updating model parameters in the direction of the negative gradient."},
+    {q:"What is overfitting?",a:"When a model learns training data too well including noise, resulting in poor generalisation to unseen data."},
+    {q:"What is regularisation?",a:"A technique to prevent overfitting by adding a penalty for model complexity (L1/L2 regularisation)."},
+    {q:"What is a confusion matrix?",a:"A table showing TP, FP, TN, FN values used to evaluate classifier performance."},
+    {q:"What is transfer learning?",a:"Reusing a model pre-trained on one task as the starting point for a model on a different but related task."},
+    {q:"Define cross-validation",a:"A technique to evaluate model performance by training/testing on different subsets of the dataset."},
+    {q:"What is a hyperparameter?",a:"A configuration parameter set before training that controls the learning process (e.g. learning rate, epochs)."},
+    {q:"What is the bias-variance tradeoff?",a:"The balance between a model's tendency to underfit (high bias) and overfit (high variance)."},
+    {q:"What is feature engineering?",a:"The process of selecting, transforming, or creating input variables to improve model performance."},
+    {q:"What does PCA do?",a:"Principal Component Analysis reduces dimensionality by projecting data onto axes of maximum variance."},
+    {q:"What is an epoch?",a:"One complete pass through the entire training dataset during model training."},
+  ],
+  "Data Structures": [
+    {q:"What is a stack?",a:"A linear data structure following LIFO (Last-In-First-Out) order with push and pop operations."},
+    {q:"What is a queue?",a:"A linear data structure following FIFO (First-In-First-Out) order with enqueue and dequeue operations."},
+    {q:"What is a binary search tree?",a:"A tree where each node's left subtree contains smaller values and right subtree contains larger values."},
+    {q:"What is a hash table?",a:"A data structure that maps keys to values using a hash function for O(1) average-case lookup."},
+    {q:"What is a heap?",a:"A complete binary tree where every parent node is greater (max-heap) or smaller (min-heap) than its children."},
+    {q:"What is a graph?",a:"A non-linear data structure consisting of vertices (nodes) and edges (connections between nodes)."},
+    {q:"Define time complexity",a:"A measure of how the running time of an algorithm scales with input size, expressed using Big-O notation."},
+    {q:"What is a linked list?",a:"A linear data structure where elements are stored in nodes, each containing data and a pointer to the next node."},
+    {q:"What is memoization?",a:"An optimisation technique that stores results of expensive function calls and returns cached results for the same inputs."},
+    {q:"What is dynamic programming?",a:"A method for solving complex problems by breaking them into overlapping subproblems and storing solutions."},
+  ],
+  "Algorithms": [
+    {q:"What is Big-O notation?",a:"A mathematical notation describing the upper bound on an algorithm's time or space complexity as input grows."},
+    {q:"What is divide and conquer?",a:"An algorithmic strategy that recursively breaks a problem into smaller subproblems, solves them, then combines results."},
+    {q:"What is BFS?",a:"Breadth-First Search explores all nodes at the current depth before moving deeper, using a queue."},
+    {q:"What is DFS?",a:"Depth-First Search explores as far as possible along each branch before backtracking, using a stack or recursion."},
+    {q:"What is a greedy algorithm?",a:"An algorithm that makes the locally optimal choice at each step, hoping to find a global optimum."},
+    {q:"What is Dijkstra's algorithm?",a:"A shortest-path algorithm for weighted graphs with non-negative edges, using a priority queue."},
+    {q:"What is the complexity of merge sort?",a:"O(n log n) in all cases — best, average, and worst — making it very reliable."},
+    {q:"What is backtracking?",a:"An algorithmic technique that incrementally builds solutions and abandons them when they fail constraints."},
+  ],
+  "Computer Networks": [
+    {q:"What is TCP/IP?",a:"Transmission Control Protocol/Internet Protocol — the fundamental communication protocol suite of the internet."},
+    {q:"What is the OSI model?",a:"A 7-layer conceptual model describing how network protocols interact: Physical, Data Link, Network, Transport, Session, Presentation, Application."},
+    {q:"What is DNS?",a:"Domain Name System — translates human-readable domain names into IP addresses."},
+    {q:"What is HTTP vs HTTPS?",a:"HTTP is unsecured web protocol; HTTPS adds TLS/SSL encryption for secure data transmission."},
+    {q:"What is a subnet mask?",a:"A 32-bit number that divides an IP address into network and host portions."},
+    {q:"What is a firewall?",a:"A network security device that monitors and controls incoming/outgoing traffic based on defined security rules."},
+    {q:"What is latency?",a:"The time delay between sending a request and receiving a response across a network."},
+    {q:"What is bandwidth?",a:"The maximum rate of data transfer across a network path, measured in bits per second."},
+    {q:"What is NAT?",a:"Network Address Translation — maps private IP addresses to a public IP address for internet access."},
+    {q:"What is a MAC address?",a:"A unique hardware identifier assigned to a network interface card, used for communication within a local network."},
+  ],
+  "Database Systems": [
+    {q:"What is ACID?",a:"Atomicity, Consistency, Isolation, Durability — properties that guarantee reliable database transactions."},
+    {q:"What is normalization?",a:"The process of organizing database tables to reduce redundancy and improve data integrity."},
+    {q:"What is a primary key?",a:"A column (or set of columns) that uniquely identifies each row in a database table."},
+    {q:"What is a foreign key?",a:"A column that creates a link between two tables by referencing the primary key of another table."},
+    {q:"What is an index?",a:"A database object that improves query performance by creating a fast lookup structure on one or more columns."},
+    {q:"What is SQL?",a:"Structured Query Language — a standard language for managing and querying relational databases."},
+    {q:"What is a JOIN?",a:"A SQL operation that combines rows from two or more tables based on a related column."},
+    {q:"What is a transaction?",a:"A sequence of database operations treated as a single unit that either all succeed or all fail (rollback)."},
+    {q:"What is NoSQL?",a:"Non-relational databases that store data in formats like documents, key-value, column-family, or graphs."},
+  ],
+  "Operating Systems": [
+    {q:"What is a process?",a:"A program in execution, containing the program code, its current activity, and allocated resources."},
+    {q:"What is a thread?",a:"The smallest unit of CPU utilization; a lightweight process that shares memory with other threads in the same process."},
+    {q:"What is deadlock?",a:"A state where two or more processes are blocked, each waiting for a resource held by the other."},
+    {q:"What is virtual memory?",a:"A memory management technique that uses disk space to extend the apparent size of RAM."},
+    {q:"What is scheduling?",a:"The OS mechanism that decides which process runs next on the CPU (e.g. Round Robin, FCFS, Priority)."},
+    {q:"What is a semaphore?",a:"A synchronization primitive used to control access to shared resources in concurrent programming."},
+    {q:"What is paging?",a:"A memory management scheme that divides physical memory into fixed-size frames and virtual memory into pages."},
+    {q:"What is a system call?",a:"An interface through which a program requests a service from the OS kernel."},
+    {q:"What is the kernel?",a:"The core of an OS that manages hardware resources, process scheduling, memory, and I/O."},
+    {q:"What is IPC?",a:"Inter-Process Communication — mechanisms (pipes, sockets, shared memory) that allow processes to communicate."},
+    {q:"What is a context switch?",a:"The process of saving the state of a running process and loading the state of another process to run next."},
+  ]
+};
+
+/* ─── State ──────────────────────────────────────────────────── */
+let currentDeckName   = '';
+let originalDeck      = [];   // master copy for reset
+let activeDeck        = [];   // current cards (minus learned)
+let learnedCards      = [];   // removed cards
+let currentCardIdx    = 0;
+let isFlipped         = false;
+
+/* ─── DOM refs ───────────────────────────────────────────────── */
+const deckSelector    = document.getElementById('deckSelector');
+const flashcardViewer = document.getElementById('flashcardViewer');
+const fcDeckName      = document.getElementById('fcDeckName');
+const fcCardNum       = document.getElementById('fcCardNum');
+const fcCardTotal     = document.getElementById('fcCardTotal');
+const fcRemaining     = document.getElementById('fcRemaining');
+const flashcard       = document.getElementById('flashcard');
+const flashcardScene  = document.getElementById('flashcardScene');
+const cardQuestion    = document.getElementById('cardQuestion');
+const cardAnswer      = document.getElementById('cardAnswer');
+const fcDeckEmpty     = document.getElementById('fcDeckEmpty');
+const statsLearned    = document.getElementById('statsLearned');
+const statsTotal      = document.getElementById('statsTotal');
+const statsFill       = document.getElementById('statsFill');
+const statsBar        = statsFill.closest('[role="progressbar"]');
+
+/* ─── loadDeck() ─────────────────────────────────────────────── */
+function loadDeck(name) {
+  currentDeckName = name;
+  originalDeck    = DECK_DATA[name] ? [...DECK_DATA[name]] : [];
+  activeDeck      = [...originalDeck];
+  learnedCards    = [];
+  currentCardIdx  = 0;
+  isFlipped       = false;
+
+  fcDeckName.textContent = name;
+  deckSelector.style.display = 'none';
+  flashcardViewer.classList.add('active');
+  fcDeckEmpty.classList.remove('show');
+  flashcardScene.style.display = '';
+
+  renderCard();
+  updateStats();
+}
+
+/* ─── backToDecks() ──────────────────────────────────────────── */
+function backToDecks() {
+  flashcardViewer.classList.remove('active');
+  deckSelector.style.display = '';
+  // Reset flip state for next time
+  flashcard.classList.remove('flipped');
+  isFlipped = false;
+}
+
+/* ─── renderCard() ───────────────────────────────────────────── */
+function renderCard() {
+  if (activeDeck.length === 0) {
+    flashcardScene.style.display = 'none';
+    fcDeckEmpty.classList.add('show');
+    return;
+  }
+  fcDeckEmpty.classList.remove('show');
+  flashcardScene.style.display = '';
+
+  // Reset flip
+  if (isFlipped) {
+    flashcard.classList.remove('flipped');
+    isFlipped = false;
+  }
+
+  const card = activeDeck[currentCardIdx];
+  cardQuestion.textContent = card.q;
+  cardAnswer.textContent   = card.a;
+
+  const total = activeDeck.length;
+  fcCardNum.textContent   = currentCardIdx + 1;
+  fcCardTotal.textContent = total;
+  fcRemaining.textContent = total + ' remaining';
+
+  flashcard.setAttribute('aria-label',
+    isFlipped ? 'Card back — answer shown' : 'Card front — click to flip');
+}
+
+/* ─── flipCard() ─────────────────────────────────────────────── */
+function flipCard() {
+  isFlipped = !isFlipped;
+  flashcard.classList.toggle('flipped', isFlipped);
+  flashcard.setAttribute('aria-label',
+    isFlipped ? 'Card back — answer shown' : 'Card front — click to flip');
+}
+
+/* ─── nextCard() ─────────────────────────────────────────────── */
+function nextCard() {
+  if (activeDeck.length === 0) return;
+  isFlipped = false;
+  flashcard.classList.remove('flipped');
+  currentCardIdx = (currentCardIdx + 1) % activeDeck.length;
+  renderCard();
+}
+
+/* ─── prevCard() ─────────────────────────────────────────────── */
+function prevCard() {
+  if (activeDeck.length === 0) return;
+  isFlipped = false;
+  flashcard.classList.remove('flipped');
+  currentCardIdx = (currentCardIdx - 1 + activeDeck.length) % activeDeck.length;
+  renderCard();
+}
+
+/* ─── shuffleCards() (Fisher-Yates) ─────────────────────────── */
+function shuffleCards() {
+  if (activeDeck.length < 2) return;
+  for (let i = activeDeck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [activeDeck[i], activeDeck[j]] = [activeDeck[j], activeDeck[i]];
+  }
+  currentCardIdx = 0;
+  isFlipped = false;
+  flashcard.classList.remove('flipped');
+  renderCard();
+  showToast('Deck shuffled!', 'info', 2200);
+}
+
+/* ─── markLearned() ─────────────────────────────────────────── */
+function markLearned() {
+  if (activeDeck.length === 0) return;
+  const removed = activeDeck.splice(currentCardIdx, 1)[0];
+  learnedCards.push(removed);
+  if (currentCardIdx >= activeDeck.length && activeDeck.length > 0) {
+    currentCardIdx = activeDeck.length - 1;
+  }
+  updateStats();
+  renderCard();
+  showToast('Card marked as learned! ✓', 'success', 2400);
+}
+
+/* ─── resetDeck() ────────────────────────────────────────────── */
+function resetDeck() {
+  activeDeck      = [...originalDeck];
+  learnedCards    = [];
+  currentCardIdx  = 0;
+  isFlipped       = false;
+  flashcard.classList.remove('flipped');
+  fcDeckEmpty.classList.remove('show');
+  flashcardScene.style.display = '';
+  updateStats();
+  renderCard();
+  showToast('Deck reset — all cards restored.', 'info', 2400);
+}
+
+/* ─── updateStats() ─────────────────────────────────────────── */
+function updateStats() {
+  const total   = originalDeck.length;
+  const learned = learnedCards.length;
+  const pct     = total > 0 ? Math.round((learned / total) * 100) : 0;
+  statsLearned.textContent = learned;
+  statsTotal.textContent   = total;
+  statsFill.style.width    = pct + '%';
+  statsBar.setAttribute('aria-valuenow', pct);
+}
+
+/* ─── Deck card click & keyboard ────────────────────────────── */
+document.querySelectorAll('.deck-card').forEach(card => {
+  card.addEventListener('click', () => loadDeck(card.dataset.deck));
+  card.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      loadDeck(card.dataset.deck);
+    }
+  });
+});
+
+/* ─── Button events ──────────────────────────────────────────── */
+document.getElementById('backToDecksBtn').addEventListener('click', backToDecks);
+document.getElementById('backFromEmptyBtn').addEventListener('click', backToDecks);
+document.getElementById('flipCard').addEventListener('click', flipCard);
+document.getElementById('nextCard').addEventListener('click', nextCard);
+document.getElementById('prevCard').addEventListener('click', prevCard);
+document.getElementById('shuffleCards').addEventListener('click', shuffleCards);
+document.getElementById('markLearned').addEventListener('click', markLearned);
+document.getElementById('resetDeck').addEventListener('click', resetDeck);
+document.getElementById('resetEmptyBtn').addEventListener('click', resetDeck);
+
+/* Card scene click to flip */
+flashcardScene.addEventListener('click', e => {
+  if (e.target.closest('#flipCard')) return; // handled above
+  if (activeDeck.length > 0) flipCard();
+});
+flashcard.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    if (activeDeck.length > 0) flipCard();
+  }
+});
+
+/* ─── Keyboard shortcuts ─────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  // Only when viewer is active
+  if (!flashcardViewer.classList.contains('active')) return;
+  // Ignore when focus is on a button
+  if (['BUTTON','A','INPUT'].includes(document.activeElement.tagName)) {
+    if (document.activeElement === flashcard) {/* allow */} else return;
+  }
+  switch (e.key) {
+    case ' ':
+    case 'Enter':
+      e.preventDefault();
+      if (activeDeck.length > 0) flipCard();
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      nextCard();
+      break;
+    case 'ArrowLeft':
+      e.preventDefault();
+      prevCard();
+      break;
+    case 'l':
+    case 'L':
+      markLearned();
+      break;
+  }
+});
+</script>
+</body>
+</html>
